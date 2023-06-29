@@ -763,7 +763,7 @@ describe(data7$edeq6_global) # good
 
 # dat combined
 ```{r}
-dat <- plyr::rbind.fill(data1, data2, data3, data4, data5, data6, data7) # 461 x 386
+dat <- plyr::rbind.fill(data1, data2, data3, data4, data5, data6, data7)
 dim(dat) # 460 x 327
 remove <- c(allmiss_oie, allmiss_invivo) # completely missing dat
 # length(remove) # removed 13
@@ -787,8 +787,6 @@ sleep/app already rescored across datasets
 
 ## bdi
 ```{r}
-#### dh3 - non clinical 20 item ####
-# 15 and 17 already rescored
 dat[grepl("^bdi", colnames(dat))]
 dat <- dat %>% mutate(bdi_total = rowSums(select(., starts_with("bdi_")), na.rm = TRUE)* ifelse(rowSums(is.na(select(., starts_with("bdi_")))) == ncol(select(., starts_with("bdi_"))), NA, 1))
 
@@ -817,9 +815,8 @@ describe(dat[grepl("fmps_\\D", colnames(dat))])
 
 ## fof
 ```{r}
-#### dh3 ####
 names(dat[grepl("^fof", colnames(dat))])
-dat <- dat[!grepl("^fof_sc", colnames(dat))]
+dat <- dat[!grepl("^fof_sc", colnames(dat))] # items not used for scales
 # anxiety about eating
 dat$fofm_ae <- rowSums(dat[c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")]))
 # food anxiety behaviors
@@ -837,7 +834,6 @@ describe(dat[grepl("fofm_\\D", colnames(dat))])
 
 ## oci
 ```{r}
-#### dh3 ####
 names(dat[grepl("^oci", colnames(dat))])
 
 # Washing = 5, 11, 17
@@ -876,9 +872,9 @@ describe(dat$saas_total)
 
 
 ## pswq
-r15 missing pswq
+r15 missing pswq; RPS 10 item version
 ```{r}
-names(dat[grepl("^pswq", colnames(dat))]) # 11 items
+names(dat[grepl("^pswq", colnames(dat))]) 
 
 dat$pswq_total <- rowSums(dat[c("pswq1r", "pswq_2", "pswq3r", "pswq_4", "pswq_5", "pswq_6", "pswq_7", "pswq8r", "pswq_9", "pswq10r", "pswq11r", "pswq_12", "pswq_13", "pswq_14", "pswq_15", "pswq_16")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("pswq1r", "pswq_2", "pswq3r", "pswq_4", "pswq_5", "pswq_6", "pswq_7", "pswq8r", "pswq_9", "pswq10r", "pswq11r", "pswq_12", "pswq_13", "pswq_14", "pswq_15", "pswq_16")]))
 
@@ -887,7 +883,6 @@ describe(dat$pswq_total)
 
 ## efq
 ```{r}
-#### dh3 ####
 names(dat[grepl("^efq", colnames(dat))])
 # Subscales:
 # Fear of weight gain: efq items 1,2. 
@@ -1062,7 +1057,6 @@ describe(dat$saas_total) # 4-80 good
 
 11 participants did not complete the fmps
 ```{r}
-#	Concern Over Mistakes (COM): 9, 10, 13, 14, 18, 21, 23, 25, 34
 dat %>% filter(is.na(fmps_com)) %>% select(participant_id, fmps_9, fmps_10, fmps_13, fmps_14, fmps_18, fmps_21, fmps_23, fmps_25, fmps_34) # 11 
 
 dat %>% filter(is.na(fmps_da)) %>% select(participant_id, fmps_17, fmps_28, fmps_32, fmps_33) # 11
@@ -1071,7 +1065,6 @@ dat %>% filter(is.na(fmps_pc)) %>% select(participant_id, fmps_3, fmps_5, fmps_2
 
 dat %>% filter(is.na(fmps_pe)) %>% select(participant_id, fmps_1, fmps_11, fmps_15, fmps_20, fmps_26)  # 11
 
-# Personal Standards (PS): 4, 6, 12, 16, 19, 24, 30
 dat %>% filter(is.na(fmps_ps)) %>% select(participant_id, fmps_4, fmps_6, fmps_12, fmps_16, fmps_19, fmps_24, fmps_30)  # 11
 
 dat %>% filter(is.na(fmps_total)) # 11
@@ -1079,7 +1072,7 @@ dat %>% filter(is.na(fmps_total)) # 11
 
 ## PSWQ
 
-83 did complete the pswq
+83 did complete the pswq but not included in R15
 RPS uses 10 item version
 
 ```{r}
@@ -1128,7 +1121,6 @@ dh3 and r15 didn't do pclc
 7 didn't do PCLC
 ```{r}
 dat %>% filter((study=="PT" | study=="IE" | study == "invivo" | study == "RPS" | study == "CS") & is.na(pclc_global)) %>% select(participant_id,starts_with("pclc"))  # 7
-
 ```
 
 # diagnosis
