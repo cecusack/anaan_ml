@@ -1,21 +1,20 @@
 ---
 title: "AAN missingness and measures"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+    theme: cosmo
+    df_print: paged
 date: "2023-06-27"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-# libs
-```{r message=FALSE, warning=FALSE}
-library(tidyverse)
-library(psych)
-library(data.table)
-library(sjmisc)
-```
-
 
 **Participants/Missingness Summary**
 - There were a total of 728 participants. Two-hundred sixty-eight participants were removed for meeting criteria for eating disorders other than AN or atypical AN. Item-level missingness across the 7 studies was 5.1% (study missingness ranged from 1.0% - 11.9%). Thirteen participants were removed due to completely missing data on measures, resulting in a final sample of 447 participants, with an item-level missingness rate at 2.2%. About half of the sample met criteria for AN (n = 232, 51.9%) and half for AAN (n = 215 AAN; 48.1%). Participants had a mean age of 30.37 (SD = 10.20, Range = 16-66). Most participants were white (86.8%), followed by 5.2% Hispanic, 2.5% Asian or Pacific Islander, 2.5% Multi-racial, 0.5% Black, and 0.5% Indian or Alaskan Native. One participant reported their race was not listed and nine participants opted out of reporting their race.
@@ -40,13 +39,24 @@ library(sjmisc)
 FOFM, OCI, SAAS, EPSI, FMPS, EFQ
 Even though studies use different versions of EDE-Q and BDI, they are calculated the same and included and named the same for easy merging
 
+# libs
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(psych)
+library(data.table)
+library(sjmisc)
+library(table1)
+library(rcompanion)
+library(naniar)
+```
+
 Below I look at the measures more closely.
 
 # load dat add study names
 
 In this code chunk, I load the RData Yuchen sent me with raw dat from the 7 studies. For easy subsetting later when data are combined, I add a study variable indicating which row is in which study. You could tell by the variable participant_id, but this is easier. 
 
-```{r}
+```{r results='hide'}
 # from Yuchen 6/27/23
 load("CombineAAN.RData")
 
@@ -79,7 +89,7 @@ rm(data)
 # keep only AN/AAN
 
 Across all 7 datasets, I recode numeric diagnoses as characters. Then I keep only participants with a diagnosis of AN or AAN.
-```{r}
+```{r results='hide'}
 #### dh3 ####
 dim(data1) # 147 x 272
 table(data1$CurrentDX2, useNA = "ifany")
@@ -95,7 +105,6 @@ data1$dx <- ifelse(data1$CurrentDX2=="ANR", "AN",
 table(data1$dx, useNA = "ifany") 
 round(prop.table(table(data1$dx, useNA = "ifany"))*100,2) 
 data1 <- data1 %>% relocate(dx, .before = CurrentDX2)
-dim(data1) # 86
 
 #### pt ####
 dim(data2) # 75 x 311
@@ -231,7 +240,7 @@ In this section I examine item-level missingness of measures (i.e., not includin
 
 ## dat 1 dh3
 ```{r}
-names(data1)
+# names(data1)
 data1_noscales <- data1[c(which(colnames(data1)=="bdi_1"):ncol(data1))] 
 dim(data1_noscales) 
 round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100, 2) # 0.94%
@@ -242,7 +251,7 @@ data1_noscales[rowSums(is.na(data1_noscales))==ncol(data1_noscales),] # no one h
 
 ## dat 2 pt
 ```{r}
-names(data2)
+# names(data2)
 data2_noscales <- data2[c(which(colnames(data2)=="bdi_1"):ncol(data2))] 
 round(sum(is.na(data2_noscales))/prod(dim(data2_noscales))*100, 2) # 1.55
 dim(data2_noscales)
@@ -252,7 +261,7 @@ data2_noscales[rowSums(is.na(data2_noscales))==ncol(data2_noscales),] # 0
 
 ## dat 3 oie
 ```{r}
-names(data3)
+# names(data3)
 data3_noscales <- data3[c(which(colnames(data3)=="participant_id"), which(colnames(data3)=="bdi_1"):ncol(data3))] 
 dim(data3_noscales) 
 round(sum(is.na(data3_noscales))/prod(dim(data3_noscales))*100, 2) # 10.56%
@@ -265,7 +274,7 @@ dat3_nocomplmiss <-data3_noscales[rowSums(is.na(data3_noscales))<ncol(data3_nosc
 
 ## dat 4 in vivo
 ```{r}
-names(data4)
+# names(data4)
 
 data4_noscales <- data4[c(which(colnames(data4)=="participant_id"),which(colnames(data4)=="bdi_1"):ncol(data4))] 
 dim(data4_noscales) 
@@ -280,7 +289,7 @@ dat4_nocomplmiss <-data4_noscales[rowSums(is.na(data4_noscales))<ncol(data3_nosc
 
 ## dat 5 r15
 ```{r}
-names(data5)
+# names(data5)
 dim(data5)
 data5_noscales <- data5[c(which(colnames(data5)=="bdi_1"):ncol(data5))]
 dim(data5_noscales)
@@ -290,7 +299,7 @@ data5_noscales[rowSums(is.na(data5_noscales))==ncol(data5_noscales),] # 0
 
 ## dat 6 rps
 ```{r}
-names(data6)
+# names(data6)
 dim(data6)
 data6_noscales <- data6[c(which(colnames(data6)=="bdi_1"):ncol(data6))] 
 dim(data6_noscales) 
@@ -301,7 +310,7 @@ data6_noscales[rowSums(is.na(data6_noscales))==ncol(data6_noscales),] # 0
 
 ## dat 7 cs
 ```{r}
-names(data7)
+# names(data7)
 dim(data7)
 data7_noscales <- data7[c(which(colnames(data7)=="bdi_1"):ncol(data7))] 
 dim(data7_noscales) 
@@ -375,7 +384,7 @@ colnames(data7)[grepl('fof',colnames(data7))] <- c("fof_1", "fof_2", "fof_3", "f
 
 r15 is labeled epsi01 rest is epsi_1 fix to match
 ```{r}
-data5[grepl("^epsi", colnames(data5))]
+# data5[grepl("^epsi", colnames(data5))]
 epsinames <- sprintf("epsi_%d", seq(1:45))
 colnames(data5)[grepl('^epsi',colnames(data5))] <- epsinames # fix names good
 rm(epsinames)
@@ -385,7 +394,7 @@ rm(epsinames)
 ```{r}
 # no space in fmps: data1
 # underscore: data2, 3, 4, 5, 6, 7
-data1[grepl("^fmps", colnames(data1))]
+# data1[grepl("^fmps", colnames(data1))]
 fmpsnames <- sprintf("fmps_%d", seq(1:35))
 colnames(data1)[grepl('^fmps',colnames(data1))] <- fmpsnames # fix names good
 rm(fmpsnames)
@@ -395,7 +404,7 @@ rm(fmpsnames)
 
 ```{r}
 #### dh3 31 items ####
-data1[grepl("^efq", colnames(data1))]
+# data1[grepl("^efq", colnames(data1))]
 data1 <- data1[!grepl("efq_31|efq_31.*", colnames(data1))]
 
 # 2=1, 5=2, 7= 3, 10=4, 11=5, 12=6, 13=7, 14=8, 4= 9, 17=10, 15=11, 9=12,
@@ -450,7 +459,7 @@ data3 <- data3[!grepl("^efq_\\d{1,2}$", colnames(data3))]
 colnames(data3)[grepl('^efq',colnames(data3))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data3[grepl("^efq", colnames(data3))]))
 
 #### in vivo #### 30 items
-data4[grepl("^efq", colnames(data4))]
+# data4[grepl("^efq", colnames(data4))]
 
 data4$efq_1new <- data4$efq_2
 data4$efq_2new <- data4$efq_5
@@ -477,26 +486,26 @@ data4 <- data4[!grepl("^efq_\\d{1,2}$", colnames(data4))]
 colnames(data4)[grepl('^efq',colnames(data4))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data4[grepl("^efq", colnames(data4))]))
 
 #### r15 #### 20 items
-data5[grepl("^efq", colnames(data5))]
+# data5[grepl("^efq", colnames(data5))]
 
 #### rps #### 20 items
-data6[grepl("^efq", colnames(data6))]
+# data6[grepl("^efq", colnames(data6))]
 
 #### cs #### 20 items
-data7[grepl("^efq", colnames(data7))]
+# data7[grepl("^efq", colnames(data7))]
 ```
 
 
 ## pswq
 ```{r}
-names(data1[grepl("^pswq", colnames(data1))]) # no dash r
-names(data2[grepl("^pswq", colnames(data2))])  # dash and no dash with r
-names(data3[grepl("^pswq", colnames(data3))]) # no dash r
-names(data4[grepl("^pswq", colnames(data4))]) # no dash r
-names(data6[grepl("^pswq", colnames(data6))]) # no dash 4
-names(data7[grepl("^pswq", colnames(data7))]) # no dash r
+# names(data1[grepl("^pswq", colnames(data1))]) # no dash r
+# names(data2[grepl("^pswq", colnames(data2))])  # dash and no dash with r
+# names(data3[grepl("^pswq", colnames(data3))]) # no dash r
+# names(data4[grepl("^pswq", colnames(data4))]) # no dash r
+# names(data6[grepl("^pswq", colnames(data6))]) # no dash 4
+# names(data7[grepl("^pswq", colnames(data7))]) # no dash r
 
-data2 %>% select(pswq_1, pswq1r, pswq_1r)
+data2 %>% select(pswq_1, pswq1r) %>% head()
 # remove dashed
 data2 <- data2[!grepl("(pswq_\\d{1,2})(r)", colnames(data2))]
 ```
@@ -519,25 +528,25 @@ data7 <- data7[-which(colnames(data7)=="bdi_7")]
 dh3 add underscore
 
 ```{r}
-data1[grepl("^saas", colnames(data1))]
+# [grepl("^saas", colnames(data1))]
 colnames(data1)[grepl('^saas',colnames(data1))] <- gsub("saas", "saas_", colnames(data1[grepl("^saas", colnames(data1))]), fixed = TRUE)
 
-data2[grepl("^saas", colnames(data2))]
+# data2[grepl("^saas", colnames(data2))]
 data2 <- data2 %>% rename(saas_1r=saas1r)
 
-data3[grepl("^saas", colnames(data3))]
+# data3[grepl("^saas", colnames(data3))]
 data3 <- data3 %>% rename(saas_1r=saas1r)
 
-data4[grepl("^saas", colnames(data4))]
+# data4[grepl("^saas", colnames(data4))]
 data4 <- data4 %>% rename(saas_1r=saas1r)
 
-data5[grepl("^saas", colnames(data5))]
+# data5[grepl("^saas", colnames(data5))]
 data5 <- data5 %>% rename(saas_1r=saas1r)
 
-data6[grepl("^saas", colnames(data6))]
+# data6[grepl("^saas", colnames(data6))]
 data6 <- data6 %>% rename(saas_1r=saas1r)
 
-data7[grepl("^saas", colnames(data7))]
+# data7[grepl("^saas", colnames(data7))]
 data7 <- data7 %>% rename(saas_1r=saas1r)
 ```
 
@@ -546,8 +555,8 @@ data7 <- data7 %>% rename(saas_1r=saas1r)
 Because we have the EDE-Q 4 and EDE-Q 6, I score the EDE-Q before merging. After I combine, I will create a new column for easy analyses that is just labeled "edeq_global." But there will also be columns like "edeq4_global" and "edeq6_global" in case that's helpful for some reason I can't anticipate.
 
 ### dh3
-```{r}
-data1[grepl("^ede", colnames(data1))]
+```{r results='hold'}
+# data1[grepl("^ede", colnames(data1))]
 # remove subscale scores
 data1 <- data1[!grepl("^edeq4", colnames(data1))]
 
@@ -580,8 +589,8 @@ describe(data1$edeq4_global) # good
 ```
 
 ### pt
-```{r}
-data2[grepl("^ede", colnames(data2))]
+```{r results='hold'}
+# data2[grepl("^ede", colnames(data2))]
 # remove subscale scores
 data2 <- data2[!grepl("^edeq6_\\D", colnames(data2))]
 
@@ -614,8 +623,8 @@ describe(data2$edeq6_global) # good
 ```
 
 ### online ie
-```{r}
-data3[grepl("^ede", colnames(data3))]
+```{r results='hold'}
+# data3[grepl("^ede", colnames(data3))]
 # remove subscale scores
 data3 <- data3[!grepl("^edeq4", colnames(data3))]
 
@@ -648,8 +657,8 @@ describe(data3$edeq4_global) # good
 ```
 
 ### in vivo
-```{r}
-data4[grepl("^ede", colnames(data4))]
+```{r results='hold'}
+# data4[grepl("^ede", colnames(data4))]
 # remove subscale scores
 data4 <- data4[!grepl("^edeq4", colnames(data4))]
 
@@ -682,9 +691,9 @@ describe(data4$edeq4_global) # good
 ```
 
 ### r15
-```{r}
+```{r results='hold'}
 data5 <- data5 %>% rename(edeq6_21=edeq21) %>% relocate(edeq6_21, .after = edeq6_20)
-data5[grepl("^ede", colnames(data5))]
+# data5[grepl("^ede", colnames(data5))]
 # remove subscale scores
 data5 <- data5[!grepl("^edeq6_\\D", colnames(data5))]
 
@@ -717,8 +726,8 @@ describe(data5$edeq6_global) # good
 ```
 
 ### rps
-```{r}
-data6[grepl("^ede", colnames(data6))]
+```{r results='hold'}
+# data6[grepl("^ede", colnames(data6))]
 # remove subscale scores
 data6 <- data6[!grepl("^edeq6_\\D", colnames(data6))]
 
@@ -751,8 +760,8 @@ describe(data6$edeq6_global) # good
 ```
 
 ### cs
-```{r}
-data7[grepl("^ede", colnames(data7))]
+```{r results='hold'}
+# data7[grepl("^ede", colnames(data7))]
 # remove subscale scores
 data7 <- data7[!grepl("^edeq6_\\D", colnames(data7))]
 
@@ -813,15 +822,15 @@ sleep/app already rescored across datasets
 
 ## bdi
 ```{r}
-dat[grepl("^bdi", colnames(dat))]
+# dat[grepl("^bdi", colnames(dat))]
 dat <- dat %>% mutate(bdi_total = rowSums(select(., starts_with("bdi_")), na.rm = TRUE)* ifelse(rowSums(is.na(select(., starts_with("bdi_")))) == ncol(select(., starts_with("bdi_"))), NA, 1))
 
 describe(dat$bdi_total)
 ```
 
 ## fmps
-```{r}
-names(dat[grepl("^fmps", colnames(dat))]) # good
+```{r results='hold'}
+# names(dat[grepl("^fmps", colnames(dat))]) # good
 
 dat$fmps_com <- rowSums(sapply(dat[,c("fmps_9", "fmps_10", "fmps_13", "fmps_14", "fmps_18", "fmps_21", "fmps_23", "fmps_25", "fmps_34")], as.numeric), na.rm=TRUE)*NA^!rowSums(!is.na(dat[,c("fmps_9", "fmps_10", "fmps_13", "fmps_14", "fmps_18", "fmps_21", "fmps_23", "fmps_25", "fmps_34")]))
 
@@ -839,8 +848,8 @@ describe(dat[grepl("fmps_\\D", colnames(dat))])
 ```
 
 ## fof
-```{r}
-names(dat[grepl("^fof", colnames(dat))])
+```{r results='hold'}
+# names(dat[grepl("^fof", colnames(dat))])
 dat <- dat[!grepl("^fof_sc", colnames(dat))] # items not used for scales
 # anxiety about eating
 dat$fofm_ae <- rowSums(dat[c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")]))
@@ -857,8 +866,8 @@ describe(dat[grepl("fofm_\\D", colnames(dat))])
 ```
 
 ## oci
-```{r}
-names(dat[grepl("^oci", colnames(dat))])
+```{r results='hold'}
+# names(dat[grepl("^oci", colnames(dat))])
 
 # Washing = 5, 11, 17
 dat$oci_wash <- rowSums(sapply(dat[,c("oci_5","oci_11","oci_17")], as.numeric), na.rm=TRUE)*NA^!rowSums(!is.na(dat[,c("oci_5","oci_11","oci_17")]))
@@ -887,7 +896,7 @@ describe(dat[grepl("oci_\\D", colnames(dat))])
 ## saas
 ```{r}
 # 1 is already reverse coded can check with something like data1 %>% select(saas_1, saas_1r)
-names(dat[grepl("^saas", colnames(dat))])
+# names(dat[grepl("^saas", colnames(dat))])
 
 dat$saas_total <- rowSums(dat[c("saas_1r", "saas_2", "saas_3", "saas_4", "saas_5", "saas_6", "saas_7", "saas_8", "saas_9", "saas_10", "saas_11", "saas_12", "saas_13", "saas_14", "saas_15", "saas_16")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("saas_1r", "saas_2", "saas_3", "saas_4", "saas_5", "saas_6", "saas_7", "saas_8", "saas_9", "saas_10", "saas_11", "saas_12", "saas_13", "saas_14", "saas_15", "saas_16")]))
 
@@ -898,7 +907,7 @@ describe(dat$saas_total)
 ## pswq
 r15 missing pswq; RPS 10 item version
 ```{r}
-names(dat[grepl("^pswq", colnames(dat))]) 
+# names(dat[grepl("^pswq", colnames(dat))]) 
 
 dat$pswq_total <- rowSums(dat[c("pswq1r", "pswq_2", "pswq3r", "pswq_4", "pswq_5", "pswq_6", "pswq_7", "pswq8r", "pswq_9", "pswq10r", "pswq11r", "pswq_12", "pswq_13", "pswq_14", "pswq_15", "pswq_16")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("pswq1r", "pswq_2", "pswq3r", "pswq_4", "pswq_5", "pswq_6", "pswq_7", "pswq8r", "pswq_9", "pswq10r", "pswq11r", "pswq_12", "pswq_13", "pswq_14", "pswq_15", "pswq_16")]))
 
@@ -906,8 +915,8 @@ describe(dat$pswq_total)
 ```
 
 ## efq
-```{r}
-names(dat[grepl("^efq", colnames(dat))])
+```{r results='hold'}
+# names(dat[grepl("^efq", colnames(dat))])
 # Subscales:
 # Fear of weight gain: efq items 1,2. 
 dat$efq_wtgain <- rowMeans(sapply(dat[,c("efq_1", "efq_2")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(dat[,c("efq_1", "efq_2")]))
@@ -931,7 +940,7 @@ describe(dat[grepl("efq_\\D", colnames(dat))])
 ## pclc
 PCLC is *NOT* in DH3 or R15.
 ```{r}
-names(dat[grepl("^pclc", colnames(dat))])
+# names(dat[grepl("^pclc", colnames(dat))])
 dat <- dat %>%
   mutate(pclc_global = rowSums(select(., starts_with('pclc_')), na.rm=TRUE)* ifelse(rowSums(is.na(select(., starts_with('pclc_')))) == ncol(select(., starts_with('pclc_'))), NA, 1))
 
@@ -941,8 +950,8 @@ describe(dat$pclc_global)
 ## epsi
 (dh3, oie, invivo studies do not include the epsi)
 
-```{r}
-names(dat[grepl("^epsi", colnames(dat))])
+```{r results='hold'}
+# names(dat[grepl("^epsi", colnames(dat))])
 
 dat$epsi_bodydis <- rowSums(sapply(dat[,c("epsi_1", "epsi_12", "epsi_18", "epsi_23", "epsi_24", "epsi_25", "epsi_34")], as.numeric), na.rm=TRUE)*NA^!rowSums(!is.na(dat[,c("epsi_1", "epsi_12", "epsi_18", "epsi_23", "epsi_24", "epsi_25", "epsi_34")]))
 
@@ -977,8 +986,8 @@ Below I check how many people did not complete specific measures. I also check t
 ## edeq
 
 3 participants did not respond to any ede-q items
-```{r}
-dat[grep("edeq\\d_global", colnames(dat))]
+```{r results='hold'}
+# dat[grep("edeq\\d_global", colnames(dat))]
 dat$edeq_global <- NA
 dat$edeq_global <- ifelse(!is.na(dat$edeq6_global), dat$edeq6_global,
                            ifelse(!is.na(dat$edeq4_global), dat$edeq4_global, NA))
@@ -1027,7 +1036,7 @@ describe(dat[c(which(colnames(dat)=="edeq_global"), which(colnames(dat)=="edeq_e
 ## BDI
 
 10 participants did not respond to any BDI items
-```{r}
+```{r results='hold'}
 dat %>% filter(is.na(bdi_total)) %>% select(participant_id,starts_with("bdi")) # 10
 
 #### check plausible values ####
@@ -1038,8 +1047,8 @@ describe(dat$bdi_total) # 0-57 okay
 
 1 participant left this whole scale missing 
 ### subscales
-```{r}
-names(dat[grepl("^fof", colnames(dat))])
+```{r results='hold'}
+# names(dat[grepl("^fof", colnames(dat))])
 dat %>% filter(is.na(fofm_global)) %>% select(participant_id, starts_with("fof"))
 
 dat %>% filter(is.na(fofm_ae)) %>% select(participant_id,fof_1, fof_2, fof_3, fof_4, fof_5, fof_6, fof_7, fof_8, fofm_ae) # good
@@ -1058,7 +1067,7 @@ describe(dat[grepl("fofm_\\D", colnames(dat))])
 ## OCI
 
 9 participants did not complete the OCI
-```{r}
+```{r results='hold'}
 dat %>% filter(is.na(oci_global)) %>% select(participant_id, starts_with("oci")) # 9
 dat %>% filter(is.na(oci_wash)) %>% select(participant_id, oci_5, oci_11, oci_17)
 # 9 missing
@@ -1074,7 +1083,7 @@ dat %>% filter(is.na(oci_neut)) %>% select(participant_id, oci_4, oci_10, oci_16
 ## SAAS
 
 1 participant did not complete the saas
-```{r}
+```{r results='hold'}
 dat %>% filter(is.na(saas_total)) %>% select(participant_id, starts_with("saas"))
 
 describe(dat$saas_total) # 4-80 good
@@ -1083,7 +1092,7 @@ describe(dat$saas_total) # 4-80 good
 ## fmps
 
 11 participants did not complete the fmps
-```{r}
+```{r results='hold'}
 dat %>% filter(is.na(fmps_com)) %>% select(participant_id, fmps_9, fmps_10, fmps_13, fmps_14, fmps_18, fmps_21, fmps_23, fmps_25, fmps_34) # 11 
 
 dat %>% filter(is.na(fmps_da)) %>% select(participant_id, fmps_17, fmps_28, fmps_32, fmps_33) # 11
@@ -1102,7 +1111,7 @@ dat %>% filter(is.na(fmps_total)) # 11
 83 did complete the pswq but not included in R15
 RPS uses 10 item version
 
-```{r}
+```{r results='hold'}
 dat %>% filter(is.na(pswq_total)) %>% select(participant_id, starts_with("pswq"))
 
 describe(dat$pswq_total) # 12-80 good
@@ -1113,7 +1122,7 @@ describe(dat$pswq_total) # 12-80 good
 5 people didn't do the epsi
 (dh3, oie, invivo studies do not include the epsi)
 
-```{r}
+```{r results='hold'}
 dat %>% filter((study=="PT" | study=="PR" |study=="RPS" | study=="CS") & is.na(epsi_bodydis)) %>% select(participant_id, epsi_1, epsi_12, epsi_18, epsi_23, epsi_24, epsi_25, epsi_34, epsi_bodydis) # 5
 
 dat %>% filter((study=="PT" | study=="PR" | study=="RPS" | study=="CS") & is.na(epsi_bingeeat)) %>% select(participant_id,epsi_3, epsi_9, epsi_19, epsi_28, epsi_37, epsi_39, epsi_44, epsi_45, epsi_bingeeat) # 5
@@ -1134,7 +1143,7 @@ dat %>% filter((study=="PT" | study=="PR" | study=="RPS" | study=="CS") & is.na(
 ## EFQ 
 
 4 people didn't do the EFQ
-```{r}
+```{r results='hold'}
 dat %>% filter(is.na(efq_wtgain)) %>% select(participant_id,starts_with("efq")) # 4
 dat %>% filter(is.na(efq_socialcons)) %>% select(participant_id,starts_with("efq"))
 dat %>% filter(is.na(efq_personal)) %>% select(participant_id,starts_with("efq"))
@@ -1154,12 +1163,21 @@ dat %>% filter((study=="PT" | study=="IE" | study == "invivo" | study == "RPS" |
 
 Here I examine how many participants were diagnosed with AN and atypical AN. 215 participants had AAN (48.1%) and 232 participants had AN (51.9%). Specifiers are in the comments.
 
-```{r}
-table(dat$CurrentDX2, useNA = "ifany")
-# 86 = AANBP, 129 = AANR, 104 = ANBP, 128 = ANR
-table(dat$dx, useNA = "ifany")
-round(prop.table(table(dat$dx, useNA = "ifany"))*100,2)
-# 215 AAN (48.1%) 232 AN (51.9%)
+```{r results='hold'}
+table1(~dx+ CurrentDX2, data=dat,
+    overall=c(left="Total"), caption="Diagnoses")
+
+# chisq.test(dat$study, dat$dx, correct=TRUE) # p = 0.15
+df <- as.data.frame(matrix(nrow = 7,  ncol = 2))
+df[1] <- as.matrix(table(dat$study, dat$dx))[,1]
+df[2] <- as.matrix(table(dat$study, dat$dx))[,2]
+names(df) <- c("AAN", "AN")
+rownames(df) <- unique(unlist(as.data.frame(table(dat$study, dat$dx))[1]))
+df <- as.matrix(df)
+chisq.test(df, correct=TRUE) # women v other
+# X-squared = 9.479, df = 6, p-value = 0.1484
+rcompanion::cramerV(df, ci=TRUE) 
+# cramer's v = 0.1456, lower ci = 0.1003, upper.ci = 0.26
 ```
 
 
@@ -1185,13 +1203,16 @@ dat$ethnicity <- ifelse(dat$ethnicity=="0", "Indian or Alaskan Native",
 racetab <- as.data.frame(table(dat$ethnicity, useNA = "ifany"))
 names(racetab)[2] <- "count"
 racetab <- cbind(racetab, as.data.frame(round(prop.table(table(dat$ethnicity, useNA = "ifany"))*100,2))[2])
+names(racetab)[c(1,3)] <- c("race", "perc")
+
+racetab
 ```
 
 # move columns around
 
 Here I put columns in an order I like, so total and subscale scores immediately after the measure.
 
-```{r}
+```{r results='hide'}
 names(dat)
 dat <- relocate(dat, study)
 dat <- dat %>% relocate(bdi_total, .after = bdi_20) %>% relocate(bdi_21, .before = bdi_total)
@@ -1218,6 +1239,14 @@ dat <- dat %>% sjmisc::move_columns("epsi_bodydis", "epsi_bingeeat", "epsi_cogre
 dat <- dat %>% relocate(pclc_global, .after = pclc_17)
 
 dat <- dat %>% sjmisc::move_columns("efq_wtgain", "efq_socialcons", "efq_personal", "efq_discomf", "efq_socialeat", .after = efq_20) 
+```
+
+# visualize missingness
+```{r warning=FALSE}
+gg_miss_upset(dat)
+gg_miss_var(dat[grepl("\\D$", colnames(dat))],
+            facet = study)
+# gg_miss_case(dat)
 ```
 
 # save
