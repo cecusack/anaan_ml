@@ -42,7 +42,10 @@ Even though studies use different versions of EDE-Q and BDI, they are calculated
 
 Below I look at the measures more closely.
 
-# all dat combined
+# load dat add study names
+
+In this code chunk, I load the RData Yuchen sent me with raw dat from the 7 studies. For easy subsetting later when data are combined, I add a study variable indicating which row is in which study. You could tell by the variable participant_id, but this is easier. 
+
 ```{r}
 # from Yuchen 6/27/23
 load("CombineAAN.RData")
@@ -74,6 +77,8 @@ rm(data)
 ```
 
 # keep only AN/AAN
+
+Across all 7 datasets, I recode numeric diagnoses as characters. Then I keep only participants with a diagnosis of AN or AAN.
 ```{r}
 #### dh3 ####
 dim(data1) # 147 x 272
@@ -194,6 +199,9 @@ dim(data7) # 27
 ```
 
 # remove scaled scores
+
+When I was checking a combined dataset earlier, I noticed that all of the measures had issues (e.g., NA values when there shouldn't have been), so I started over by removing all scaled scores.
+
 ```{r}
 # names(data1)
 data1 <- data1[!grepl("bdi_total|^edeq4|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D", colnames(data1))]
@@ -218,6 +226,9 @@ data7 <- data7[!grepl("bdi_total|^edeq6_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|glo
 ```
 
 # missingness by dataset
+
+In this section I examine item-level missingness of measures (i.e., not including demos) by dataset. 
+
 ## dat 1 dh3
 ```{r}
 names(data1)
@@ -300,6 +311,9 @@ data7_noscales[rowSums(is.na(data7_noscales))==ncol(data7_noscales),] # 0
 ```
 
 ## all
+
+item-level missingness datasets combined.
+
 ```{r}
 {sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(data3_noscales)), sum(is.na(data4_noscales)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
 {sum(
@@ -309,6 +323,9 @@ data7_noscales[rowSums(is.na(data7_noscales))==ncol(data7_noscales),] # 0
 ```
 
 ### if you remove the completely missing people
+
+Here, I look at missingness when we remove people who have zero measurs completed.
+
 ```{r}
 round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(dat3_nocomplmiss)), sum(is.na(dat4_nocomplmiss)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
 {sum(
@@ -317,6 +334,9 @@ round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(dat
 ```
 
 # fix column names for easy merging
+
+There were inconsistencies in how variables were named. I fix those here to make for easier merging later.
+
 ## fofm
 ```{r}
 #### dh3 ####
@@ -522,6 +542,9 @@ data7 <- data7 %>% rename(saas_1r=saas1r)
 ```
 
 # EDE-Q
+
+Because we have the EDE-Q 4 and EDE-Q 6, I score the EDE-Q before merging. After I combine, I will create a new column for easy analyses that is just labeled "edeq_global." But there will also be columns like "edeq4_global" and "edeq6_global" in case that's helpful for some reason I can't anticipate.
+
 ### dh3
 ```{r}
 data1[grepl("^ede", colnames(data1))]
@@ -762,6 +785,9 @@ describe(data7$edeq6_global) # good
 ```
 
 # dat combined
+
+Here, I combine all 7 dats into one object. Then, I remove 13 participants with completely missing data.
+
 ```{r}
 dat <- plyr::rbind.fill(data1, data2, data3, data4, data5, data6, data7)
 dim(dat) # 460 x 327
@@ -792,7 +818,6 @@ dat <- dat %>% mutate(bdi_total = rowSums(select(., starts_with("bdi_")), na.rm 
 
 describe(dat$bdi_total)
 ```
-
 
 ## fmps
 ```{r}
@@ -830,7 +855,6 @@ dat$fofm_global <- rowSums(dat[c("fofm_ae", "fofm_fab", "fofm_fc")], na.rm = TRU
 
 describe(dat[grepl("fofm_\\D", colnames(dat))])
 ```
-
 
 ## oci
 ```{r}
@@ -947,6 +971,9 @@ describe(dat[grepl("epsi_\\D", colnames(dat))])
 ```
 
 # checks
+
+Below I check how many people did not complete specific measures. I also check that scores are within their plausible ranges. 
+
 ## edeq
 
 3 participants did not respond to any ede-q items
@@ -1124,6 +1151,9 @@ dat %>% filter((study=="PT" | study=="IE" | study == "invivo" | study == "RPS" |
 ```
 
 # diagnosis
+
+Here I examine how many participants were diagnosed with AN and atypical AN. 215 participants had AAN (48.1%) and 232 participants had AN (51.9%). Specifiers are in the comments.
+
 ```{r}
 table(dat$CurrentDX2, useNA = "ifany")
 # 86 = AANBP, 129 = AANR, 104 = ANBP, 128 = ANR
@@ -1134,6 +1164,9 @@ round(prop.table(table(dat$dx, useNA = "ifany"))*100,2)
 
 
 # age, race
+
+Calculate more participant characteristics. Participants were around 30 years old, mostly white cis women.
+
 ```{r}
 describe(dat$age) # m = 30.36 (SD = 10.20, Range = 16-66)
 dat %>% filter(age<18) # 3 onlineIE participants were under 18 (IE061, IE079, IE167)
@@ -1152,13 +1185,15 @@ dat$ethnicity <- ifelse(dat$ethnicity=="0", "Indian or Alaskan Native",
 racetab <- as.data.frame(table(dat$ethnicity, useNA = "ifany"))
 names(racetab)[2] <- "count"
 racetab <- cbind(racetab, as.data.frame(round(prop.table(table(dat$ethnicity, useNA = "ifany"))*100,2))[2])
-
-dat <- relocate(dat, study)
 ```
 
 # move columns around
+
+Here I put columns in an order I like, so total and subscale scores immediately after the measure.
+
 ```{r}
 names(dat)
+dat <- relocate(dat, study)
 dat <- dat %>% relocate(bdi_total, .after = bdi_20) %>% relocate(bdi_21, .before = bdi_total)
 
 dat <- dat %>%sjmisc::move_columns("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc", "edeq4_global", .after = ede_q_42) 
@@ -1186,6 +1221,9 @@ dat <- dat %>% sjmisc::move_columns("efq_wtgain", "efq_socialcons", "efq_persona
 ```
 
 # save
+
+saving work as csv with date.
+
 ```{r}
 name= 'ANAANcombined_cec_'
 filetype= '.csv'
