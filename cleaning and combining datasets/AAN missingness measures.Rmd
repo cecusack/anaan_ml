@@ -82,8 +82,8 @@ data6 <- data6 %>% relocate(study)
 data7$study <- "CS"
 data7 <- data7 %>% relocate(study)
 
-rm(list = ls.str(mode = 'character'))
-rm(data)
+rm(list = ls.str(mode = 'character')) # clean up environment / remove all of Yuchen's character vectors
+rm(data) # redundant with data7
 ```
 
 # keep only AN/AAN
@@ -402,6 +402,7 @@ rm(fmpsnames)
 
 ## efq
 
+the datasets that contain 30 item efq were input in redcap with different numbers that changed after psychometrics. I name variables correctly, e.g., with the 20-item version
 ```{r}
 #### dh3 31 items ####
 # data1[grepl("^efq", colnames(data1))]
@@ -430,8 +431,8 @@ data1$efq_18new <- data1$efq_20
 data1$efq_19new <- data1$efq_19
 data1$efq_20new <- data1$efq_23
 
-data1 <- data1[!grepl("^efq_\\d{1,2}$", colnames(data1))]
-colnames(data1)[grepl('^efq',colnames(data1))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data1[grepl("^efq", colnames(data1))]))
+data1 <- data1[!grepl("^efq_\\d{1,2}$", colnames(data1))] # remove items that follow the pattern efq_[:digit:]
+colnames(data1)[grepl('^efq',colnames(data1))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data1[grepl("^efq", colnames(data1))])) # remove 'new' from efq column names 
 
 #### online ie#### 30 items
 data3$efq_1new <- data3$efq_2
@@ -455,8 +456,8 @@ data3$efq_18new <- data3$efq_20
 data3$efq_19new <- data3$efq_19
 data3$efq_20new <- data3$efq_23
 
-data3 <- data3[!grepl("^efq_\\d{1,2}$", colnames(data3))]
-colnames(data3)[grepl('^efq',colnames(data3))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data3[grepl("^efq", colnames(data3))]))
+data3 <- data3[!grepl("^efq_\\d{1,2}$", colnames(data3))] # remove items that follow the pattern efq_[:digit:]
+colnames(data3)[grepl('^efq',colnames(data3))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data3[grepl("^efq", colnames(data3))])) # remove 'new' from efq column names
 
 #### in vivo #### 30 items
 # data4[grepl("^efq", colnames(data4))]
@@ -482,8 +483,8 @@ data4$efq_18new <- data4$efq_20
 data4$efq_19new <- data4$efq_19
 data4$efq_20new <- data4$efq_23
 
-data4 <- data4[!grepl("^efq_\\d{1,2}$", colnames(data4))]
-colnames(data4)[grepl('^efq',colnames(data4))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data4[grepl("^efq", colnames(data4))]))
+data4 <- data4[!grepl("^efq_\\d{1,2}$", colnames(data4))] # remove items that follow the pattern efq_[:digit:]
+colnames(data4)[grepl('^efq',colnames(data4))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data4[grepl("^efq", colnames(data4))])) # remove 'new' from efq column names
 
 #### r15 #### 20 items
 # data5[grepl("^efq", colnames(data5))]
@@ -507,16 +508,16 @@ colnames(data4)[grepl('^efq',colnames(data4))] <- sub("(efq_\\d{1,2})(new)", "\\
 
 data2 %>% select(pswq_1, pswq1r) %>% head()
 # remove dashed
-data2 <- data2[!grepl("(pswq_\\d{1,2})(r)", colnames(data2))]
+data2 <- data2[!grepl("(pswq_\\d{1,2})(r)", colnames(data2))] # so reverse coded items follow the pattern pswq1r
 ```
 
 ## bdi
 ```{r}
 # data1[grepl("^bdi", colnames(data1))]
-# data2[grepl("^bdi", colnames(data2))]
+# data2[grepl("^bdi", colnames(data2))] # item 7 removed already
 # data3[grepl("^bdi", colnames(data3))]
 # data4[grepl("^bdi", colnames(data4))]
-# data5[grepl("^bdi", colnames(data5))]
+# data5[grepl("^bdi", colnames(data5))] # item 7 removed already
 # data6[grepl("^bdi", colnames(data6))]
 # data7[grepl("^bdi", colnames(data7))]
 data6 <- data6[-which(colnames(data6)=="bdi_7")]
@@ -1078,6 +1079,9 @@ dat %>% filter(is.na(oci_hoard)) %>% select(participant_id, oci_1, oci_7, oci_13
 dat %>% filter(is.na(oci_order)) %>% select(participant_id, oci_3, oci_9, oci_15) # 9 missing
 dat %>% filter(is.na(oci_check)) %>% select(participant_id, oci_2, oci_8, oci_14) # 9 missing
 dat %>% filter(is.na(oci_neut)) %>% select(participant_id, oci_4, oci_10, oci_16) # 9 missing
+
+#### check plausible values ####
+describe(dat[grepl("oci_\\D", colnames(dat))])
 ```
 
 ## SAAS
@@ -1104,6 +1108,9 @@ dat %>% filter(is.na(fmps_pe)) %>% select(participant_id, fmps_1, fmps_11, fmps_
 dat %>% filter(is.na(fmps_ps)) %>% select(participant_id, fmps_4, fmps_6, fmps_12, fmps_16, fmps_19, fmps_24, fmps_30)  # 11
 
 dat %>% filter(is.na(fmps_total)) # 11
+
+#### check plausible values ####
+describe(dat[grepl("fmps_\\D", colnames(dat))])
 ```
 
 ## PSWQ
@@ -1138,6 +1145,9 @@ dat %>% filter((study=="PT" | study=="PR" | study=="RPS" | study=="CS") & is.na(
 dat %>% filter((study=="PT" | study=="PR" | study=="RPS" | study=="CS") & is.na(epsi_negobesity)) %>% select(epsi_14, epsi_20, epsi_26, epsi_30, epsi_38, epsi_negobesity) # 5
 
 dat %>% filter((study=="PT" | study=="PR" | study=="RPS" | study=="CS") & is.na(epsi_muscle)) %>% select(epsi_7, epsi_15, epsi_29, epsi_32, epsi_35, epsi_muscle) # 5
+
+#### check plausible values ####
+describe(dat[grepl("epsi_\\D", colnames(dat))])
 ```
 
 ## EFQ 
@@ -1149,6 +1159,9 @@ dat %>% filter(is.na(efq_socialcons)) %>% select(participant_id,starts_with("efq
 dat %>% filter(is.na(efq_personal)) %>% select(participant_id,starts_with("efq"))
 dat %>% filter(is.na(efq_discomf)) %>% select(participant_id,starts_with("efq"))
 dat %>% filter(is.na(efq_socialeat)) %>% select(participant_id,starts_with("efq"))
+
+#### check plausible values ####
+describe(dat[grepl("efq_\\D", colnames(dat))])
 ```
 
 ## PCLC
@@ -1157,6 +1170,8 @@ dh3 and r15 didn't do pclc
 7 didn't do PCLC
 ```{r}
 dat %>% filter((study=="PT" | study=="IE" | study == "invivo" | study == "RPS" | study == "CS") & is.na(pclc_global)) %>% select(participant_id,starts_with("pclc"))  # 7
+
+describe(dat$pclc_global)
 ```
 
 # diagnosis
