@@ -16,11 +16,6 @@ date: "2023-06-27"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-**Participants/Missingness Summary**
-- There were a total of 728 participants. Two-hundred sixty-eight participants were removed for meeting criteria for eating disorders other than AN or atypical AN. Item-level missingness across the 7 studies was 5.1% (study missingness ranged from 1.0% - 11.9%). Thirteen participants were removed due to completely missing data on measures, resulting in a final sample of 447 participants, with an item-level missingness rate at 2.2%. About half of the sample met criteria for AN (n = 232, 51.9%) and half for AAN (n = 215 AAN; 48.1%). Participants had a mean age of 30.37 (SD = 10.20, Range = 16-66). Most participants were white (86.8%), followed by 5.2% Hispanic, 2.5% Asian or Pacific Islander, 2.5% Multi-racial, 0.5% Black, and 0.5% Indian or Alaskan Native. One participant reported their race was not listed and nine participants opted out of reporting their race.
-
-- still need gender (currently only have sex assigned) and bmi
-
 *measurement differences*
 - BDI: 
   - non clinical (20 item): dh3, online ie, in vivo. rescored items 15 and 17
@@ -48,6 +43,7 @@ library(sjmisc)
 library(table1)
 library(rcompanion)
 library(naniar)
+library(clairecleans)
 ```
 
 Below I look at the measures more closely.
@@ -57,289 +53,98 @@ Below I look at the measures more closely.
 In this code chunk, I load the RData Yuchen sent me with raw dat from the 7 studies. For easy subsetting later when data are combined, I add a study variable indicating which row is in which study. You could tell by the variable participant_id, but this is easier. 
 
 ```{r results='hide'}
-# from Yuchen 6/27/23
-load("CombineAAN.RData")
-
+# Cardbox > R15 Sensor Preprocessing and Analysis > RAW ALL datasets deidentified
 # data 1 = DH3
+data1_import <- read.csv("dh3_merged.csv")
+data1 <- data1_import
+data1 <- data1[-which(colnames(data1)=="X")]
 data1$study <- "DH3"
 data1 <- data1 %>% relocate(study)
+dim(data1) # 147 x 377
 # data 2 = PT
+data2_import <- read.csv("PT_CLEANED_data.csv")
+data2 <- data2_import
+data2 <- data2[-which(colnames(data2)=="X")]
 data2$study <- "PT"
 data2 <- data2 %>% relocate(study)
-# data 3 = IE
+dim(data2) # 75 x 1891
+# data 3 = online IE
+data3_import <- read.csv("OIE2.csv")
+data3 <- data3_import
+data3 <- data3[-which(colnames(data3)=="X")]
 data3$study <- "IE"
 data3 <- data3 %>% relocate(study)
+dim(data3) # 229 x 943
 # data 4 = V
+data4_import <- read.csv("IIE2.csv")
+data4 <- data4_import
+data4 <- data4[-which(colnames(data4)=="X")]
 data4$study <- "invivo"
 data4 <- data4 %>% relocate(study)
-# data 5 = PR
+dim(data4) # 37 x 1137
+# data 5 = R15 PR
+data5_import <- read.csv("R15CLEANED_data.csv")
+data5 <- data5_import
+data5 <- data5[-which(colnames(data5)=="X")]
 data5$study <- "PR"
 data5 <- data5 %>% relocate(study)
-# data 6 = RPS
+dim(data5) # 99 x 689
+# data 6 = R34 RPS
+data6_import <- read.csv("R34CLEANED_data.csv")
+data6 <- data6_import
+data6 <- data6[-which(colnames(data6)=="X")]
 data6$study <- "RPS"
 data6 <- data6 %>% relocate(study)
+dim(data6) # 99 x 2053
 # data 7 = CS
+data7_import <- read.csv("CS_CLEANED_data.csv")
+data7 <- data7_import
+data7 <- data7[-which(colnames(data7)=="X")]
 data7$study <- "CS"
 data7 <- data7 %>% relocate(study)
-
-rm(list = ls.str(mode = 'character')) # clean up environment / remove all of Yuchen's character vectors
-rm(data) # redundant with data7
+dim(data7) # 42 x 29741
 ```
 
-# keep only AN/AAN
-
-Across all 7 datasets, I recode numeric diagnoses as characters. Then I keep only participants with a diagnosis of AN or AAN.
-```{r results='hide'}
+# select columns
+```{r}
 #### dh3 ####
-dim(data1) # 147 x 272
-table(data1$CurrentDX2, useNA = "ifany")
-data1$CurrentDX2 <- recode(data1$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data1 <- data1 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data1) # 86
-table(data1$CurrentDX2, useNA = "ifany")
-
-data1$dx <- ifelse(data1$CurrentDX2=="ANR", "AN", 
-                 ifelse(data1$CurrentDX2=="ANBP", "AN",
-                        ifelse(data1$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data1$dx, useNA = "ifany") 
-round(prop.table(table(data1$dx, useNA = "ifany"))*100,2) 
-data1 <- data1 %>% relocate(dx, .before = CurrentDX2)
+# doesn't include epsi or pclc
+data1 <- cbind(cbind(data1[c(1:2, 4:18)], data1[grepl("DX", colnames(data1))]),
+      data1[grepl("^bdi|^ede_|^fof|oci|saas|fmps|pswq|efq_\\d{1,2}$", colnames(data1))])
+# remove fof_sc\\d{1,2}
+data1 <- data1[!grepl("fof_sc", colnames(data1))]
 
 #### pt ####
-dim(data2) # 75 x 311
-table(data2$CurrentDX2, useNA = "ifany")
-data2$CurrentDX2 <- recode(data2$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data2 <- data2 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data2) # 33
-table(data2$CurrentDX2, useNA = "ifany")
-
-data2$dx <- ifelse(data2$CurrentDX2=="ANR", "AN", 
-                 ifelse(data2$CurrentDX2=="ANBP", "AN",
-                        ifelse(data2$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data2$dx, useNA = "ifany") 
-round(prop.table(table(data2$dx, useNA = "ifany"))*100,2) 
-data2 <- data2 %>% relocate(dx, .before = CurrentDX2)
-dim(data2)  # 33
+# bdi clinical, edeq6
+data2 <- cbind(cbind(data2[c(1, 2, 4:12,23:32)], data2[grepl("DX", colnames(data2))]),
+      data2[grepl("Confirmed.Dx|^bdi_\\d{1,2}$|^edeq|^fof|oci|saas_\\d{1,2}|fmps|pswq_\\d{1,2}$|efq|epsi|pclc", colnames(data2))])
+# remove fof_sc\\d{1,2}
+data2 <- data2[!grepl("fof_sc", colnames(data2))]
 
 #### online ie ####
-dim(data3) # 229 x 272
-table(data3$CurrentDX2, useNA = "ifany")
-data3$CurrentDX2 <- recode(data3$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data3 <- data3 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data3) # 127
-table(data3$CurrentDX2, useNA = "ifany")
-
-data3$dx <- ifelse(data3$CurrentDX2=="ANR", "AN", 
-                 ifelse(data3$CurrentDX2=="ANBP", "AN",
-                        ifelse(data3$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data3$dx, useNA = "ifany") 
-round(prop.table(table(data3$dx, useNA = "ifany"))*100,2) 
-data3 <- data3 %>% relocate(dx, .before = CurrentDX2)
-dim(data3) 
+data3 <- cbind(data3[c(1, 3, 5:12, 263, 265, 280:286)], 
+      data3[grepl("bdi|T1ede_q_\\d{1,2}$|fof|oci|saas|fmps_\\d{1,2}$|pswq_\\d{1,2}|^T1efq_\\d{1,2}$|pclc", colnames(data3))])
+data3 <- data3[!grepl("T1EFQsocial", colnames(data3))]
 
 #### in vivo ####
-dim(data4) # 37 x 272
-table(data4$CurrentDX2, useNA = "ifany")
-data4$CurrentDX2 <- recode(data4$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data4 <- data4 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data4) # 27
-table(data4$CurrentDX2, useNA = "ifany")
+data4 <- cbind(data4[c(1:3, 319:342)], 
+      data4[grepl("bdi|ede_q_\\d{1,2}|fof|oci_\\d{1,2}$|saas_\\d{1,2}|fmps_\\d{1,2}|pswq|efq_\\d{1,2}|pclc", colnames(data4))])
 
-data4$dx <- ifelse(data4$CurrentDX2=="ANR", "AN", 
-                 ifelse(data4$CurrentDX2=="ANBP", "AN",
-                        ifelse(data4$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data4$dx, useNA = "ifany") 
-round(prop.table(table(data4$dx, useNA = "ifany"))*100,2) 
-data4 <- data4 %>% relocate(dx, .before = CurrentDX2)
-
-#### r15 ####
-dim(data5) # 99 x 266
-table(data5$CurrentDX2, useNA = "ifany")
-data5$CurrentDX2 <- recode(data5$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data5 <- data5 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data5) # 75
-table(data5$CurrentDX2, useNA = "ifany")
-
-data5$dx <- ifelse(data5$CurrentDX2=="ANR", "AN", 
-                 ifelse(data5$CurrentDX2=="ANBP", "AN",
-                        ifelse(data5$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data5$dx, useNA = "ifany") 
-round(prop.table(table(data5$dx, useNA = "ifany"))*100,2) 
-data5 <- data5 %>% relocate(dx, .before = CurrentDX2)
+#### pr ####
+data5 <- cbind(data5[c(1:5, 7:17, 19:24)], 
+      data5[grepl("bdi|edeq|fof|oci_\\d{1,2}$|saas_\\d{1,2}|fmps_\\d{1,2}|efq_\\d{1,2}|epsi", colnames(data5))])
+data5 <- data5[!grepl("fof_sc", colnames(data5))]
 
 #### rps ####
-dim(data6) # 99 x 302
-table(data6$CurrentDX2, useNA = "ifany")
-data6$CurrentDX2 <- recode(data6$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data6 <- data6 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data6) # 85
-table(data6$CurrentDX2, useNA = "ifany")
-
-data6$dx <- ifelse(data6$CurrentDX2=="ANR", "AN", 
-                 ifelse(data6$CurrentDX2=="ANBP", "AN",
-                        ifelse(data6$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data6$dx, useNA = "ifany") 
-round(prop.table(table(data6$dx, useNA = "ifany"))*100,2) 
-data6 <- data6 %>% relocate(dx, .before = CurrentDX2)
+data6 <- cbind(data6[c(1:2, 4:10, 263:265, 276:283, 285:286, 288, 289, 300, 302, 303, 304,315:319)], 
+      data6[grepl("^bdi|edeq|ae\\d|fab\\d|fc\\d|^oci|saas_\\d{1,2}|fmps_\\d{1,2}|efq_\\d{1,2}|epsi|pclc|pswq", colnames(data6))])
+data6 <- data6[!grepl("edeq6_restraint|edeq6_eating|edeq6_shape|edeq6_weight|edeq6_global", colnames(data6))]
 
 #### cs ####
-dim(data7) # 42 x 307
-table(data7$CurrentDX2, useNA = "ifany")
-data7$CurrentDX2 <- recode(data7$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
-data7 <- data7 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
-dim(data7) # 28
-table(data7$CurrentDX2, useNA = "ifany")
-
-data7$dx <- ifelse(data7$CurrentDX2=="ANR", "AN", 
-                 ifelse(data7$CurrentDX2=="ANBP", "AN",
-                        ifelse(data7$CurrentDX2=="AANR", "AAN", "AAN")))
-
-table(data7$dx, useNA = "ifany") 
-round(prop.table(table(data7$dx, useNA = "ifany"))*100,2) 
-data7 <- data7 %>% relocate(dx, .before = CurrentDX2)
+data7 <- cbind(data7[c(1:2, 4, 6:7, 185:187, 199, 200:202, 205, 206, 217, 219:226)],
+      data7[grepl("^bdi|edeq|fof|^oci|saas_\\d{1,2}|fmps_\\d{1,2}|efq_\\d{1,2}|epsi|pclc|pswq", colnames(data7))])
+data7 <- data7[!grepl("fof_sc", colnames(data7))]
 data7 <- data7[-which(data7$participant_id=="PR085"),]
-dim(data7) # 27
-```
-
-# remove scaled scores
-
-When I was checking a combined dataset earlier, I noticed that all of the measures had issues (e.g., NA values when there shouldn't have been), so I started over by removing all scaled scores.
-
-```{r}
-# names(data1)
-data1 <- data1[!grepl("bdi_total|^edeq4|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D", colnames(data1))]
-
-# names(data2)
-data2 <- data2[!grepl("bdi_total|^edeq6_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D|epsi_\\D", colnames(data2))]
-
-# names(data3)
-data3 <- data3[!grepl("bdi_total|^edeq4_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D|efq_instructions_2|EFQsocial|epsi_\\D", colnames(data3))]
-
-# names(data4)
-data4 <- data4[!grepl("bdi_total|^edeq4_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D|efq_instructions_2|EFQsocial|epsi_\\D", colnames(data4))]
-
-# names(data5)
-data5 <- data5[!grepl("bdi_total|^edeq6_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D|epsi_\\D", colnames(data5))]
-
-# names(data6)
-data6 <- data6[!grepl("bdi_total|^edeq6_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D|efq_instructions_2|EFQsocial|epsi_\\D", colnames(data6))]
-
-# names(data7)
-data7 <- data7[!grepl("bdi_total|^edeq6_\\D|fofm_[a-z]{2,3}|oci_\\D|fmps_\\D|global$|efq_\\D|efq_instructions_2|EFQsocial|epsi_\\D", colnames(data7))]
-```
-
-# missingness by dataset
-
-In this section I examine item-level missingness of measures (i.e., not including demos) by dataset. 
-
-## dat 1 dh3
-```{r}
-# names(data1)
-data1_noscales <- data1[c(which(colnames(data1)=="bdi_1"):ncol(data1))] 
-dim(data1_noscales) 
-round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100, 2) # 0.94%
-
-### ind people completely missing ###
-data1_noscales[rowSums(is.na(data1_noscales))==ncol(data1_noscales),] # no one has completely missing data
-```
-
-## dat 2 pt
-```{r}
-# names(data2)
-data2_noscales <- data2[c(which(colnames(data2)=="bdi_1"):ncol(data2))] 
-round(sum(is.na(data2_noscales))/prod(dim(data2_noscales))*100, 2) # 1.55
-dim(data2_noscales)
-
-data2_noscales[rowSums(is.na(data2_noscales))==ncol(data2_noscales),] # 0
-```
-
-## dat 3 oie
-```{r}
-# names(data3)
-data3_noscales <- data3[c(which(colnames(data3)=="participant_id"), which(colnames(data3)=="bdi_1"):ncol(data3))] 
-dim(data3_noscales) 
-round(sum(is.na(data3_noscales))/prod(dim(data3_noscales))*100, 2) # 10.56%
-
-data3_noscales[rowSums(is.na(data3_noscales))==ncol(data3_noscales)-1,] # 11
-allmiss_oie <- data3_noscales[rowSums(is.na(data3_noscales))==ncol(data3_noscales)-1,] %>% select(1) %>% unlist
-
-dat3_nocomplmiss <-data3_noscales[rowSums(is.na(data3_noscales))<ncol(data3_noscales)-1,]
-```
-
-## dat 4 in vivo
-```{r}
-# names(data4)
-
-data4_noscales <- data4[c(which(colnames(data4)=="participant_id"),which(colnames(data4)=="bdi_1"):ncol(data4))] 
-dim(data4_noscales) 
-round(sum(is.na(data4_noscales))/prod(dim(data4_noscales))*100, 2) # 9.49
-
-data4_noscales[rowSums(is.na(data4_noscales))==ncol(data4_noscales)-1,] 
-allmiss_invivo <- data4_noscales[rowSums(is.na(data4_noscales))==ncol(data4_noscales)-1,] %>% select(1) %>% unlist
-# V026, V028
-
-dat4_nocomplmiss <-data4_noscales[rowSums(is.na(data4_noscales))<ncol(data3_noscales)-1,]
-```
-
-## dat 5 r15
-```{r}
-# names(data5)
-dim(data5)
-data5_noscales <- data5[c(which(colnames(data5)=="bdi_1"):ncol(data5))]
-dim(data5_noscales)
-round(sum(is.na(data5_noscales))/prod(dim(data5_noscales))*100, 2) # 0.94
-data5_noscales[rowSums(is.na(data5_noscales))==ncol(data5_noscales),] # 0
-```
-
-## dat 6 rps
-```{r}
-# names(data6)
-dim(data6)
-data6_noscales <- data6[c(which(colnames(data6)=="bdi_1"):ncol(data6))] 
-dim(data6_noscales) 
-round(sum(is.na(data6_noscales))/prod(dim(data6_noscales))*100, 2) # 3.01
-
-data6_noscales[rowSums(is.na(data6_noscales))==ncol(data6_noscales),] # 0
-```
-
-## dat 7 cs
-```{r}
-# names(data7)
-dim(data7)
-data7_noscales <- data7[c(which(colnames(data7)=="bdi_1"):ncol(data7))] 
-dim(data7_noscales) 
-round(sum(is.na(data7_noscales))/prod(dim(data7_noscales))*100, 2) # 7.94
-
-data7_noscales[rowSums(is.na(data7_noscales))==ncol(data7_noscales),] # 0
-```
-
-## all
-
-item-level missingness datasets combined.
-
-```{r}
-{sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(data3_noscales)), sum(is.na(data4_noscales)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
-{sum(
-(dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(data3_noscales)[1]*dim(data3_noscales)[2]), (dim(data4_noscales)[1]*dim(data4_noscales)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )} 
-
-# 0.04867065, so 4.9% missing
-```
-
-### if you remove the completely missing people
-
-Here, I look at missingness when we remove people who have zero measurs completed.
-
-```{r}
-round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(dat3_nocomplmiss)), sum(is.na(dat4_nocomplmiss)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
-{sum(
-(dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(dat3_nocomplmiss)[1]*dim(dat3_nocomplmiss)[2]), (dim(dat4_nocomplmiss)[1]*dim(dat4_nocomplmiss)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )} *100, 2)
-# 2.2% missing
 ```
 
 # fix column names for easy merging
@@ -349,34 +154,27 @@ There were inconsistencies in how variables were named. I fix those here to make
 ## fofm
 ```{r}
 #### dh3 ####
-# first remove items no longer used (fof_sc1:fof_sc10)
-data1 <- data1[!grepl("fof_sc\\d+", colnames(data1))]
+# names(data1[grepl("fof", colnames(data1))])
 colnames(data1)[grepl('fof',colnames(data1))] <- c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8", "fof_9", "fof_10", "fof_11", "fof_12", "fof_13", "fof_14", "fof_15", "fof_16", "fof_17", "fof_18", "fof_19", "fof_20", "fof_21", "fof_22", "fof_23", "fof_24", "fof_25")
-# names(data1[grepl("^fof", colnames(data1))])
 
 #### pt ####
-# first remove items no longer used (fof_sc1:fof_sc10)
-data2 <- data2[!grepl("fof_sc\\d+", colnames(data2))]
-# data2[grepl("fof", colnames(data2))]
+# names(data2[grepl("fof", colnames(data2))])
 colnames(data2)[grepl('fof',colnames(data2))] <- c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8", "fof_9", "fof_10", "fof_11", "fof_12", "fof_13", "fof_14", "fof_15", "fof_16", "fof_17", "fof_18", "fof_19", "fof_20", "fof_21", "fof_22", "fof_23", "fof_24", "fof_25")
 
 #### r15 ####
-data5 <- data5[!grepl("fof_sc\\d+", colnames(data5))]
-# data5[grepl("fof", colnames(data5))]
+# names(data5[grepl("fof", colnames(data5))])
 colnames(data5)[grepl('fof',colnames(data5))] <- c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8", "fof_9", "fof_10", "fof_11", "fof_12", "fof_13", "fof_14", "fof_15", "fof_16", "fof_17", "fof_18", "fof_19", "fof_20", "fof_21", "fof_22", "fof_23", "fof_24", "fof_25")
 
 #### rps ####
-# data6[grepl("^ae", colnames(data6))]
+# names(data6[grepl("^ae", colnames(data6))])
 colnames(data6)[grepl('^ae',colnames(data6))] <- c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")
-# data6[grepl("^fab", colnames(data6))]
+# names(data6[grepl("^fab", colnames(data6))])
 colnames(data6)[grepl('^fab',colnames(data6))] <- c("fof_9", "fof_10", "fof_11", "fof_13", "fof_15", "fof_16")
-
-# data6[grepl("^fc", colnames(data6))]
+# names(data6[grepl("^fc", colnames(data6))])
 colnames(data6)[grepl('^fc',colnames(data6))] <- c("fof_17", "fof_18", "fof_19", "fof_20", "fof_21", "fof_22", "fof_23", "fof_24", "fof_25")
 
 #### cs ####
-data7 <- data7[!grepl("fof_sc\\d+", colnames(data7))]
-# data7[grepl("fof", colnames(data7))]
+# names(data7[grepl("fof", colnames(data7))])
 colnames(data7)[grepl('fof',colnames(data7))] <- c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8", "fof_9", "fof_10", "fof_11", "fof_12", "fof_13", "fof_14", "fof_15", "fof_16", "fof_17", "fof_18", "fof_19", "fof_20", "fof_21", "fof_22", "fof_23", "fof_24", "fof_25")
 ```
 
@@ -384,7 +182,7 @@ colnames(data7)[grepl('fof',colnames(data7))] <- c("fof_1", "fof_2", "fof_3", "f
 
 r15 is labeled epsi01 rest is epsi_1 fix to match
 ```{r}
-# data5[grepl("^epsi", colnames(data5))]
+# names(data5[grepl("^epsi", colnames(data5))])
 epsinames <- sprintf("epsi_%d", seq(1:45))
 colnames(data5)[grepl('^epsi',colnames(data5))] <- epsinames # fix names good
 rm(epsinames)
@@ -405,8 +203,7 @@ rm(fmpsnames)
 the datasets that contain 30 item efq were input in redcap with different numbers that changed after psychometrics. I name variables correctly, e.g., with the 20-item version
 ```{r}
 #### dh3 31 items ####
-# data1[grepl("^efq", colnames(data1))]
-data1 <- data1[!grepl("efq_31|efq_31.*", colnames(data1))]
+# names(data1[grepl("^efq", colnames(data1))])
 
 # 2=1, 5=2, 7= 3, 10=4, 11=5, 12=6, 13=7, 14=8, 4= 9, 17=10, 15=11, 9=12,
 # 19= 13, 25=14, 26=15, 29=16, 30=17, 20=18, 21=19, 23=20 
@@ -461,7 +258,6 @@ colnames(data3)[grepl('^efq',colnames(data3))] <- sub("(efq_\\d{1,2})(new)", "\\
 
 #### in vivo #### 30 items
 # data4[grepl("^efq", colnames(data4))]
-
 data4$efq_1new <- data4$efq_2
 data4$efq_2new <- data4$efq_5
 data4$efq_3new <- data4$efq_7
@@ -487,41 +283,31 @@ data4 <- data4[!grepl("^efq_\\d{1,2}$", colnames(data4))] # remove items that fo
 colnames(data4)[grepl('^efq',colnames(data4))] <- sub("(efq_\\d{1,2})(new)", "\\1", names(data4[grepl("^efq", colnames(data4))])) # remove 'new' from efq column names
 
 #### r15 #### 20 items
-# data5[grepl("^efq", colnames(data5))]
+# names(data5[grepl("^efq", colnames(data5))])
 
 #### rps #### 20 items
-# data6[grepl("^efq", colnames(data6))]
+# names(data6[grepl("^efq", colnames(data6))])
 
 #### cs #### 20 items
-# data7[grepl("^efq", colnames(data7))]
-```
-
-
-## pswq
-```{r}
-# names(data1[grepl("^pswq", colnames(data1))]) # no dash r
-# names(data2[grepl("^pswq", colnames(data2))])  # dash and no dash with r
-# names(data3[grepl("^pswq", colnames(data3))]) # no dash r
-# names(data4[grepl("^pswq", colnames(data4))]) # no dash r
-# names(data6[grepl("^pswq", colnames(data6))]) # no dash 4
-# names(data7[grepl("^pswq", colnames(data7))]) # no dash r
-
-data2 %>% select(pswq_1, pswq1r) %>% head()
-# remove dashed
-data2 <- data2[!grepl("(pswq_\\d{1,2})(r)", colnames(data2))] # so reverse coded items follow the pattern pswq1r
+# names(data7[grepl("^efq", colnames(data7))])
 ```
 
 ## bdi
 ```{r}
-# data1[grepl("^bdi", colnames(data1))]
-# data2[grepl("^bdi", colnames(data2))] # item 7 removed already
-# data3[grepl("^bdi", colnames(data3))]
-# data4[grepl("^bdi", colnames(data4))]
-# data5[grepl("^bdi", colnames(data5))] # item 7 removed already
-# data6[grepl("^bdi", colnames(data6))]
-# data7[grepl("^bdi", colnames(data7))]
-data6 <- data6[-which(colnames(data6)=="bdi_7")]
+# names(data1[grepl("^bdi", colnames(data1))])
+# names(data2[grepl("^bdi", colnames(data2))]) # remove item 7
+# names(data3[grepl("bdi", colnames(data3))]) 
+# names(data4[grepl("^bdi", colnames(data4))])
+# names(data5[grepl("^bdi", colnames(data5))]) # remove item 7
+# names(data6[grepl("^bdi", colnames(data6))]) # remove item 7, remove _clinical
+# names(data7[grepl("^bdi", colnames(data7))]) # remove item 7
+
+data2 <- data2[-which(colnames(data2)=="bdi_7")]
+data5 <- data5[-which(colnames(data5)=="bdi_7")]
+data6 <- data6[-which(colnames(data6)=="bdi_7_clinical")]
 data7 <- data7[-which(colnames(data7)=="bdi_7")]
+
+colnames(data6)[grepl('^bdi',colnames(data6))] <- gsub("(bdi_\\d{1,2})(.*)", "\\1",colnames(data6[grepl("^bdi", colnames(data6))]))
 ```
 
 
@@ -529,27 +315,671 @@ data7 <- data7[-which(colnames(data7)=="bdi_7")]
 dh3 add underscore
 
 ```{r}
-# [grepl("^saas", colnames(data1))]
+# names(data1[grep("saas", colnames(data1))])
 colnames(data1)[grepl('^saas',colnames(data1))] <- gsub("saas", "saas_", colnames(data1[grepl("^saas", colnames(data1))]), fixed = TRUE)
-
-# data2[grepl("^saas", colnames(data2))]
-data2 <- data2 %>% rename(saas_1r=saas1r)
-
-# data3[grepl("^saas", colnames(data3))]
-data3 <- data3 %>% rename(saas_1r=saas1r)
-
-# data4[grepl("^saas", colnames(data4))]
-data4 <- data4 %>% rename(saas_1r=saas1r)
-
-# data5[grepl("^saas", colnames(data5))]
-data5 <- data5 %>% rename(saas_1r=saas1r)
-
-# data6[grepl("^saas", colnames(data6))]
-data6 <- data6 %>% rename(saas_1r=saas1r)
-
-# data7[grepl("^saas", colnames(data7))]
-data7 <- data7 %>% rename(saas_1r=saas1r)
 ```
+
+## extra
+
+```{r}
+# remove T1 from data 3 names
+names(data3) <- sub("T1", "", names(data3))
+# remove demo from data6 but first delete gender because twice in demo_gender I think demo_gender is right from calling table
+data6 <- data6[-which(colnames(data6)=="gender")]
+names(data6) <- sub("demo_", "", names(data6))
+```
+
+## demo names
+```{r}
+demo1 <- names(data1[1:22])
+demo2 <- names(data2[c(1:21, ncol(data2))])
+demo3 <- names(data3[c(1:19)])
+data4 <- data4[-c(which(colnames(data4)=="ED_AN"):which(colnames(data4)=="ed_other_describe"))]
+demo4 <- names(data4[1:17])
+demo5 <- names(data5[1:22])
+demo6 <- names(data6[1:32])
+demo7 <- names(data7[1:22])
+
+# similarities
+# Reduce(intersect, list(demo1, demo2, demo3, demo4, demo5, demo6, demo7)) # lol only study, participant_id, age
+# Reduce(intersect, list(demo1, demo2))  # gender, sexual_orient, religion, ethnicity
+# setdiff(demo1, demo2) 
+# setdiff(demo2, demo1) # ht instead of height, wt instead of weight
+```
+
+### work_status
+```{r}
+# labeled work_status in data 1, data 5
+# named employment in data 2, 6, 7; 
+# named employment_status in data 4 
+# named Employment in data 3
+# not in data3
+data1 <- data1 %>% rename(employment=work_status)
+data5 <- data5 %>% rename(employment=work_status)
+data3 <- data3 %>% rename(employment=Employment)
+data4 <- data4 %>% rename(employment=employment_status)
+```
+
+### education
+```{r}
+# data1 school_year (factor), total school years (numeric)
+# data2 education (numeric)
+# data3 Schoolyrs (factor)
+# data4 years school (factor)
+# data5 school_year (factor)
+# data6 schoolyears (OPEN TEXT STRING LOLOLOL)
+# data7 education (numeric)
+# okay, so I'm going to have two education variables: 1) for factor variables named education_level; and 2) for numeric years in school named school_year
+data1 <- data1 %>% rename(education_level=school_year) %>% rename(school_year = total_school_years)
+data2 <- data2 %>% rename(school_year=education) 
+data3 <- data3 %>% rename(education_level = Schoolyrs)
+data4 <- data4 %>% rename(education_level = years_school)
+data5 <- data5 %>% rename(education_level = school_year)
+data6 <- data6[-19] # remove duplicate age col
+data6 <- data6 %>% rename(school_year = schoolyears)
+data7 <- data7 %>% rename(school_year = education)
+
+#### numeric ####
+# table(data1$school_year, useNA = "ifany")
+# str(data1$school_year)
+# table(data2$school_year, useNA = "ifany")
+# str(data2$school_year)
+# table(data7$school_year, useNA = "ifany")
+# str(data7$school_year)
+data7$school_year <- as.numeric(data7$school_year)
+
+# table(data6$school_year, useNA = "ifany")
+data6[which(data6$school_year=="10 years + GED"), "school_year"] <- "10"
+data6[which(data6$school_year=="Associates"), "school_year"] <- "14"
+# remove years and weird shit. just keep the number of years. all are 2 digits
+data6$school_year <- sub("(\\d{2}).*", "\\1", data6$school_year)
+# str(data6$school_year) # chr make numeric
+data6$school_year <- as.numeric(data6$school_year)
+
+#### factor vars ####
+# table(data1$education_level, useNA = "ifany")
+data1$education_level <- dplyr::recode(data1$education_level, "1" = "Less than high school", "2" = "High school graduate", "3"="Some college", "4"="Associate's degree", "5"="Bachelor's degree", "6"="Master's degree", "7"="Doctorate or Professional Degree")
+# table(data3$education_level, useNA = "ifany")
+data3$education_level <- dplyr::recode(data3$education_level, "1" = "Less than high school", "2" = "High school graduate", "3"="Some college", "4"="Associate's degree", "5"="Bachelor's degree", "6"="Master's degree", "7"="Doctorate or Professional Degree")
+# table(data4$education_level, useNA = "ifany")
+data4$education_level <- dplyr::recode(data4$education_level, "1" = "Less than high school", "2" = "High school graduate", "3"="Some college", "4"="Associate's degree", "5"="Bachelor's degree", "6"="Master's degree", "7"="Doctorate or Professional Degree")
+# table(data5$education_level, useNA = "ifany")
+data5$education_level <- dplyr::recode(data5$education_level, "1" = "Less than high school", "2" = "High school graduate", "3"="Some college", "4"="Associate's degree", "5"="Bachelor's degree", "6"="Master's degree", "7"="Doctorate or Professional Degree")
+```
+
+### ethnicity
+```{r}
+# data1: ethnicity, ethnicity_description, ethnicity_asian
+# data2: ethnicity, ethnicity_desc, API
+# data3: Ethnic, Ethnic1 (which is ethnicity_desc)
+# data4: ethnicity, ethnicity_describe
+# data5: ethnicity
+# data6: ethnicity, ethnicitydescr, asian_ethnicity
+# data7: ethnicity, ethnicity_desc, API
+data3 <- data3 %>% rename(ethnicity=Ethnic)
+data1 <- data1 %>% rename(ethnicity_desc=ethnicity_description)
+data3 <- data3 %>% rename(ethnicity_desc=Ethnic1)
+data4 <- data4 %>% rename(ethnicity_desc=ethnicity_describe)
+data6 <- data6 %>% rename(ethnicity_desc=ethnicitydescr)
+data1 <- data1 %>% rename(API=ethnicity_asian)
+data6 <- data6 %>% rename(API=asian_ethnicity)
+
+# table(data1$ethnicity, useNA = "ifany")
+data1$ethnicity <- dplyr::recode(data1$ethnicity, "0"="American Indian or Alaskan Native", "1" = "AAPI", "2" = "Black, not of Hispanic origin (includes African American)", "3"="Hispanic", "4"="Multiracial, Biracial, Multiple Broad Categories", "5"="White, not of Hispanic origin (includes Caucasian, European American)", "6"="Not listed")
+# table(data1$API) # factors. 1, 2, 4, 6
+data1$API <- as.character(data1$API)
+
+# table(data2$ethnicity, useNA = "ifany")
+data2$ethnicity <- dplyr::recode(data2$ethnicity, "1"="AAPI", "2"="Black, not of Hispanic origin (includes African American)", "3"="Hispanic", "4"="Multiracial, Biracial, Multiple Broad Categoriesl", "5"="White, not of Hispanic origin (includes Caucasian, European American)")
+# table(data2$API) # ugh factors. 1 and 6
+data2$API <- as.character(data2$API)
+
+# table(data3$ethnicity, useNA = "ifany")
+data3$ethnicity<- dplyr::recode(data3$ethnicity, "1" = "Chinese or Chinese American", "3"="Indian (Asia), Indian American", "4"="Japanese, Japanese American", "6"="Other Asian Origin, Multiple Asian Origins", "7"="Black, not of Hispanic origin (includes African American)", "8"="Hispanic", "9"="Multiracial, Biracial, Multiple Broad Categories", "10"="White, not of Hispanic origin (includes Caucasian, European American)", "11"="Not listed")
+data3$API <- data3$ethnicity 
+data3 <- data3 %>% relocate(API,.after = ethnicity_desc)
+
+data3$ethnicity <- ifelse(data3$API=="Chinese or Chinese American", "AAPI",
+                         ifelse(data3$API=="Japanese, Japanese American", "AAPI",
+                                ifelse(data3$API=="Indian (Asia), Indian American", "AAPI",
+                                       ifelse(data3$API=="Other Asian Origin, Multiple Asian Origins", "AAPI", data3$ethnicity))))
+
+data3$API <- ifelse(data3$ethnicity=="AAPI", data3$API, NA)
+# table(data3$ethnicity)
+# table(data3$API)
+# data3 %>% filter(ethnicity=="AAPI") %>%  select(ethnicity, API)
+
+# table(data4$ethnicity, useNA = "ifany")
+data4$ethnicity<- dplyr::recode(data4$ethnicity, "0"="American Indian or Alaskan Native", "6"="Other Asian Origin, Multiple Asian Origins", "7"="Black, not of Hispanic origin (includes African American)", "8"="Hispanic", "9"="Multiracial, Biracial, Multiple Broad Categories", "10"="White, not of Hispanic origin (includes Caucasian, European American)")
+data4$API <- data4$ethnicity
+data4 <- data4 %>% relocate(API,.after = ethnicity_desc)
+data4$ethnicity <- ifelse(data4$ethnicity=="Other Asian Origin, Multiple Asian Origins", "AAPI", data4$ethnicity)
+data4$API <- ifelse(data4$ethnicity=="AAPI", data4$API, NA)
+
+# table(data5$ethnicity, useNA = "ifany")
+data5$ethnicity <- dplyr::recode(data5$ethnicity, "1" = "AAPI", "3"="Hispanic", "4"="Multiracial, Biracial, Multiple Broad Categories", "5"="White, not of Hispanic origin (includes Caucasian, European American)", "6"="Not listed")
+
+# table(data6$ethnicity, useNA = "ifany")
+data6$ethnicity <- dplyr::recode(data6$ethnicity, "1" = "AAPI", "2"="Black, not of Hispanic origin (includes African American)", "3"="Hispanic", "4"="Multiracial, Biracial, Multiple Broad Categories", "5"="White, not of Hispanic origin (includes Caucasian, European American)")
+# data6$API # ugh factors. we have 1 and 3
+data6$API <- as.character(data6$API)
+
+# table(data7$ethnicity, useNA = "ifany")
+data7$ethnicity <- dplyr::recode(data7$ethnicity, "1" = "AAPI", "3"="Hispanic", "5"="White, not of Hispanic origin (includes Caucasian, European American)")
+# table(data7$API)
+```
+
+
+
+### gender sex
+```{r}
+# gender: data1, data2, data3, data5, data6
+# current_gender: data4
+# gender.x: data7
+data4 <- data4 %>% rename(gender=current_gender)
+data7 <- data7 %>% rename(gender=gender.y)
+
+# table(data1$gender, useNA = "ifany")
+data1$gender <- dplyr::recode(data1$gender, "1" = "cis woman", "2"="cis man", "4"="Not listed")
+
+# table(data2$gender, useNA = "ifany")
+data2$gender <- dplyr::recode(data2$gender, "1" = "cis woman", "2" = "cis man", "5"="nonbinary")
+
+# here's the breakdown
+# table(data3$gender, useNA = "ifany")
+data3$gender <- dplyr::recode(data3$gender, "0" = "cis man", "1" = "cis woman", "2"="Not listed")
+
+# table(data4$gender, useNA = "ifany")
+data4$gender <- dplyr::recode(data4$gender, "1" = "cis woman", "2" = "cis man")
+
+# table(data5$gender, useNA = "ifany")
+data5$gender <- dplyr::recode(data5$gender, "1" = "cisgender woman", "2" = "cisgender man", "3"="trans woman", "5"="nonbinary", "6"="not listed")
+
+# table(data6$gender, useNA = "ifany")
+data6$gender <- dplyr::recode(data6$gender, "1" = "cisgender woman", "2" = "cisgender man", "3"="trans woman", "4"="trans man", "5"="nonbinary", "6"="not listed")
+
+# table(data7$gender, useNA = "ifany")
+data7$gender <- dplyr::recode(data7$gender, "1" = "cisgender woman", "2" = "cisgender man", "5"="nonbinary")
+# sex: data1, data2, data4, data6, data7
+# Sex: data3
+# sex_assigned: data5
+data3 <- data3 %>% rename(sex=Sex)
+data5 <- data5 %>% rename(sex=sex_assigned)
+
+# table(data1$sex, useNA = "ifany") # 1 f, 2 m
+# table(data2$sex, useNA = "ifany") # 1 m, 2 f
+# table(data3$sex, useNA = "ifany") # 1 m 2 f
+# table(data4$sex, useNA = "ifany") # m, f
+# table(data5$sex, useNA = "ifany") # 1 m, 2f, 3intersex
+# table(data6$sex, useNA = "ifany") # 1m, 2f
+# table(data7$sex, useNA = "ifany") # 1 m, 2 f
+
+data1$sex <- dplyr::recode(data1$sex, "1" = "female", "2" = "male")
+data2$sex <- dplyr::recode(data2$sex, "1" = "male", "2" = "female")
+data2$sex <- dplyr::recode(data2$sex, "1" = "male", "2" = "female")
+data3$sex <- dplyr::recode(data3$sex, "1" = "male", "2" = "female")
+data4$sex <- dplyr::recode(data4$sex, "1" = "male", "2" = "female")
+data5$sex <- dplyr::recode(data5$sex, "1" = "male", "2" = "female", "3"="intersex")
+data6$sex <- dplyr::recode(data6$sex, "1" = "male", "2" = "female")
+data7$sex <- dplyr::recode(data7$sex, "1" = "male", "2" = "female")
+```
+
+### sex orient
+```{r}
+#sexual_orient : data1, data2, data3, data4, data5, data7
+#sexualorientation: data6
+
+data6 <- data6 %>% rename(sexual_orient = sexualorientation)
+
+# table(data1$sexual_orient, useNA = "ifany")
+data1$sexual_orient <- dplyr::recode(data1$sexual_orient, "1" = "heterosexual", "2"="gay or lesbian", "3"="bisexual", "4"="Not listed")
+
+# table(data2$sexual_orient, useNA = "ifany")
+data2$sexual_orient <- dplyr::recode(data2$sexual_orient, "1" = "heterosexual", "2"="gay or lesbian", "3"="bisexual", "4"="questioning", "5"="Not listed")
+
+# table(data3$sexual_orient, useNA = "ifany")
+data3$sexual_orient <- dplyr::recode(data3$sexual_orient, "1" = "heterosexual", "2"="gay or lesbian", "3"="bisexual", "4"="questioning", "5"="Not listed")
+
+# table(data4$sexual_orient, useNA = "ifany")
+data4$sexual_orient <- dplyr::recode(data4$sexual_orient, "1" = "heterosexual", "2"="gay or lesbian", "3"="bisexual", "4"="Not listed")
+
+# table(data5$sexual_orient, useNA = "ifany")
+data5$sexual_orient <- dplyr::recode(data5$sexual_orient, "1" = "heterosexual", "2"="gay or lesbian", "3"="bisexual", "4"="Not listed", "5"="questioning", "6"="Prefer not to disclose")
+
+# table(data6$sexual_orient, useNA = "ifany")
+data6$sexual_orient <- dplyr::recode(data6$sexual_orient, "1" = "lesbian or gay", "2"="heterosexual", "3"="bisexual", "4"="Not listed", "5"="questioning", "6"="Prefer not to disclose")
+
+# table(data7$sexual_orient, useNA = "ifany")
+data7$sexual_orient <- dplyr::recode(data7$sexual_orient, "1" = "lesbian or gay", "2"="heterosexual", "3"="bisexual", "4"="Not listed", "5"="questioning", "6"="Prefer not to disclose")
+```
+
+### employment
+```{r}
+data1$employment <- dplyr::recode(data1$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+data2$employment <- dplyr::recode(data2$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+data3$employment <- dplyr::recode(data3$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+data4$employment <- dplyr::recode(data4$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+data5$employment <- dplyr::recode(data5$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+data6$employment <- dplyr::recode(data6$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+data7$employment <- dplyr::recode(data7$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
+```
+
+
+### religion
+```{r}
+# data1: religion and religion_description
+# data2, data5, data7: religion and religion_desc
+# data3: Religion and Religion1
+# data 4: religion and religion_describe
+# data6: religion and religiondescr
+
+data1 <- data1 %>% rename(religion_desc=religion_description)
+data3 <- data3 %>% rename(religion=Religion, religion_desc = Religion1)
+data4 <- data4 %>% rename(religion_desc=religion_describe)
+data6 <- data6 %>% rename(religion_desc=religiondescr)
+
+data1$religion <- dplyr::recode(data1$religion, "0" = "Roman Catholicism", "1" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "2"="Nonreligious/secular", "3"="Judaism", "4"="Islam", "5"="Buddhism", "6"="Agnostic", "7"="Atheist", "8"="Hinduism", "9"="Not listed")
+data2$religion <- dplyr::recode(data2$religion, "1" = "Roman Catholicism", "2" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "3"="Nonreligious/secular", "4"="Judaism", "5"="Islam", "6"="Buddhism", "7"="Agnostic", "8"="Atheist", "9"="Hinduism", "10"="Not listed")
+data3$religion <- dplyr::recode(data3$religion, "1" = "Roman Catholicism", "2" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "3"="Nonreligious/secular", "4"="Judaism", "5"="Islam", "6"="Buddhism", "7"="Agnostic", "8"="Atheist", "9"="Hinduism", "10"="Not listed")
+data4$religion <- dplyr::recode(data4$religion, "1" = "Roman Catholicism", "2" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "3"="Nonreligious/secular", "4"="Judaism", "5"="Islam", "6"="Buddhism", "7"="Agnostic", "8"="Atheist", "9"="Hinduism", "10"="Not listed")
+data5$religion <- dplyr::recode(data5$religion, "1" = "Roman Catholicism", "2" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "3"="Nonreligious/secular", "4"="Judaism", "5"="Islam", "6"="Buddhism", "7"="Agnostic", "8"="Atheist", "9"="Hinduism", "10"="Not listed")
+data6$religion <- dplyr::recode(data6$religion, "1" = "Roman Catholicism", "2" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "3"="Nonreligious/secular", "4"="Judaism", "5"="Islam", "6"="Buddhism", "7"="Agnostic", "8"="Atheist", "9"="Hinduism", "10"="Not listed")
+data7$religion <- dplyr::recode(data7$religion, "1" = "Roman Catholicism", "2" = "Christian (Protestant, Baptist, Lutheran, Methodist, Presbyterian, UCC)", "3"="Nonreligious/secular", "4"="Judaism", "5"="Islam", "6"="Buddhism", "7"="Agnostic", "8"="Atheist", "9"="Hinduism", "10"="Not listed")
+
+```
+
+### marital status
+
+```{r}
+# marital_status: data2, data5, data7
+# marital: data6
+
+data6 <- data6 %>% rename(marital_status=marital)
+
+data2$marital_status <- dplyr::recode(data2$marital_status, "1" = "single, never married", "2" = "married, or remarried", "3"="divorced", "4"="separated", "5"="widowed")
+data5$marital_status <- dplyr::recode(data5$marital_status, "1" = "single, never married", "2" = "married, or remarried", "3"="divorced", "4"="separated", "5"="widowed")
+data6$marital_status <- dplyr::recode(data6$marital_status, "1" = "single, never married", "2" = "married, or remarried", "3"="divorced", "4"="separated", "5"="widowed")
+data7$marital_status <- dplyr::recode(data7$marital_status, "1" = "single, never married", "2" = "married, or remarried", "3"="divorced", "4"="separated", "5"="widowed")
+```
+
+### smoking status
+```{r}
+# smoking_status: data2, data5
+# smoke: data6 
+# smoker: data7 from smoker to smoking_status
+data2 <- data2 %>% rename(smoking_status=smoker)
+data6 <- data6 %>% rename(smoking_status=smoke)
+data7 <- data7 %>% rename(smoking_status=smoker)
+
+data2$smoking_status <- dplyr::recode(data2$smoking_status, "1"="no", "2"="yes", "3"= "no but I used to")
+data5$smoking_status <- dplyr::recode(data5$smoking_status, "1"="no", "2"="yes", "3"= "no but I used to")
+data6$smoking_status <- dplyr::recode(data6$smoking_status, "1"="no", "2"="yes", "3"= "no but I used to")
+data7$smoking_status <- dplyr::recode(data7$smoking_status, "1"="no", "2"="yes", "3"= "no but I used to")
+
+# smoking_freq: data2, data7
+data2 <- data2[-which(colnames(data2)=="smoking_freq")]
+data7 <- data7[-which(colnames(data7)=="smoking_freq")]
+data7 <- data7 %>% relocate(school_year, .after=smoking_status)
+```
+
+### income
+```{r}
+# income: data 2, data5, data6, data7
+
+data2$income <- dplyr::recode(data2$income, "1"="less than $20,000", "2"="$20,000-$34,999", "3"="$35,000-$49,999", "4"="$50,000-$74,999", "5"="$75,000-$99,999", "6"="$100,000-$149,999", "7"="$150,000-$199,999", "8"="$200,000 or more")
+
+data5$income <- dplyr::recode(data5$income, "1"="less than $20,000", "2"="$20,000-$34,999", "3"="$35,000-$49,999", "4"="$50,000-$74,999", "5"="$75,000-$99,999", "6"="$100,000-$149,999", "7"="$150,000-$199,999", "8"="$200,000 or more")
+
+data6$income <- dplyr::recode(data6$income, "1"="less than $20,000", "2"="$20,000-$34,999", "3"="$35,000-$49,999", "4"="$50,000-$74,999", "5"="$75,000-$99,999", "6"="$100,000-$149,999", "7"="$150,000-$199,999", "8"="$200,000 or more")
+
+data7$income <- dplyr::recode(data7$income, "1"="less than $20,000", "2"="$20,000-$34,999", "3"="$35,000-$49,999", "4"="$50,000-$74,999", "5"="$75,000-$99,999", "6"="$100,000-$149,999", "7"="$150,000-$199,999", "8"="$200,000 or more")
+```
+
+
+
+### children
+```{r}
+# have_children data5
+# children data6
+# only two datasets remove
+data5 <- data5[-which(colnames(data5)=="have_children")]
+data6 <- data6[-which(colnames(data6)=="children")]
+```
+
+### comorbid
+```{r}
+# not in dh3
+# data2 and data 7: comorbidities
+# data3: Comorbid
+# data4: otherdx
+# data5: psychDX
+# data6: comorbiddx
+
+data3 <- data3 %>% rename(comorbities=Comorbid)
+data4 <- data4 %>% rename(comorbities=otherdx)
+data5 <- data5 %>% rename(comorbities=psychDX)
+data6 <- data6 %>% rename(comorbities=comorbiddx)
+```
+
+### clean up some demos
+```{r}
+# PastDX1, PastDX2, TripleCheckedDX, describe_sex_orient
+data1 <- data1[-c(which(colnames(data1)=="PastDX1"), which(colnames(data1)=="PastDX2"), which(colnames(data1)=="TripleCheckedDX"), which(colnames(data1)=="describe_sex_orient"))]
+
+data5 <- data5[-c(which(colnames(data5)=="ds"), which(colnames(data5)=="ed_status"))]
+
+table(data6$race)
+table(data6$ethnicity)
+# some children variables and a redundant race col
+data6 <- data6[-c(which(colnames(data6)=="childrennum"), which(colnames(data6)=="childrenage"), which(colnames(data6)=="cigarettes"), which(colnames(data6)=="treatment_screen"), which(colnames(data6)=="days_since_dc"), which(colnames(data6)=="race"), which(colnames(data6)=="ageonset1"), which(colnames(data6)=="currentwt"))]
+
+data7 <- data7[-which(colnames(data7)=="ageonset1")]
+```
+
+### ht
+```{r}
+# height: data1, data3, data4, data6, data7
+# ht: data2, data5
+data2 <- data2 %>% rename(height=ht) %>% rename(weight=wt)
+data5 <- data5 %>% rename(height=ht) %>% rename(weight=wt)
+
+table(data1$height, useNA = "ifany") # looks okay
+str(data1$height)
+describe(data1$height) # m = 64. someon's 6'2
+# data1 %>% filter(height>70)
+# data1_import %>% filter(participant_id=="DH119")
+
+table(data2$height, useNA = "ifany") # looks bad
+fixheight(data2, "height")
+# manually fix 2
+data2[which(data2$participant_id=="PT042"), "height"] <- 65.6
+data2[which(data2$participant_id=="PT043"), "height"] <- 62.75
+data2 <- data2[-which(colnames(data2)=="height_original")]
+
+table(data3$height) # looks okay
+str(data3$height)
+describe(data3$height)
+
+table(data4$height) # looks okay
+str(data4$height)
+describe(data4$height)
+
+table(data5$height) # looks bad
+fixheight(data5, "height")
+# manually fix 5
+data5[which(data5$participant_id=="PR101"), "height"] <- 63
+data5[which(data5$participant_id=="PR102"), "height"] <- 64.5
+data5[which(data5$participant_id=="PR134"), "height"] <- 65.5
+data5[which(data5$participant_id=="PR161"), "height"] <- 62.5
+data5 <- data5[-which(colnames(data5)=="height_original")]
+
+table(data6$height) # looks ok
+str(data6$height)
+describe(data6$height)
+data6 %>% select(height, currentht) # looks good remove redundant col
+data6 <- data6[-which(colnames(data6)=="currentht")]
+
+table(data7$height) # looks ok
+str(data7$height)
+data7$height <- as.numeric(data7$height)
+describe(data7$height)
+```
+
+### weight
+```{r}
+table(data1$weight) # looks ok
+str(data1$weight)
+describe(data1$weight) # min 60
+data1 %>% filter(weight<70) # DH116 ht 6'2 AN dx
+
+table(data2$weight) # looks ok
+str(data2$weight)
+describe(data2$weight) # min 86
+
+table(data3$weight) # looks ok
+str(data3$weight)
+describe(data3$weight) # min 73.5
+
+table(data4$weight) # looks ok
+str(data4$weight)
+describe(data4$weight) # min 85
+
+table(data5$weight) # looks ok
+str(data5$weight)
+describe(data5$weight) # min 50
+data5 %>% filter(weight<70) # PR155 AN-R height 55? that's under 5 ft, which isn't unheard of just uncommon
+data5_import %>% filter(participant_id=="PR155") # says 55' yep lowest wt 46
+
+table(data6$weight) # looks ok
+str(data6$weight)
+describe(data6$weight) # min zero
+data6 %>% filter(weight<70) # RPS081 ht 59'' AN dx
+data6_import %>% filter(participant_id=="RPS081") %>% select(weight, demo_currentwt) # said ? for other wt col
+
+table(data7$weight) # looks ok
+str(data7$weight)
+describe(data7$weight) # min 65
+data7 %>% filter(weight < 70) # 5'3 but why given osfed
+```
+### diagnosis
+```{r}
+# CurrentDx2 for spec and dx for general
+data1 <- data1 %>% rename(dx=CurrentDX1)
+data2 <- data2 %>% rename(CurrentDX2=Confirmed.Dx)
+data2$dx <- data2$CurrentDX2
+data3 <- data3 %>% rename(dx=CurrentDX1)
+data4 <- data4 %>% rename(dx=Diagnosis)
+data5 <- data5 %>% rename(dx=CurrentDX1)
+data6 <- data6 %>% rename(dx=currentdx1) %>% rename(CurrentDX2=currentdx2)
+data7 <- data7 %>% rename(CurrentDX2=currentdx2)
+data7 <- data7 %>% rename(dx=currentdx1)
+
+table(data1$dx)
+data1$dx <- recode(data1$dx, "1"="AN", "2"="BN", "3"="BED", "4"="OSFED", "5"="ARFID", "6"="NoDx")
+table(data1$CurrentDX2)
+data1$CurrentDX2 <- recode(data1$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
+
+table(data2$dx)
+table(data2$CurrentDX2)
+data2$dx <- recode(data2$dx, "A-AN"="OSFED", "A-BED"="OSFED", "A-BN-P"="OSFED", "AN-R"="AN", "BED"="BED", "BN-NP"="BN", "BN-P"="BN", "USFED"="USFED", "Purging Dis"="OSFED")
+data2$CurrentDX2 <- recode(data2$CurrentDX2, "A-AN"="AAN", "A-BED"="ABED", "A-BN-P"="ABNP", "AN-R"="ANR", "BED"="BED", "BN-NP"="BNNP", "BN-P"="BNP", "USFED"="USFED", "Purging Dis"="OSFED")
+table(data2$CurrentDX2)
+
+table(data3$dx)
+data3$dx <- recode(data3$dx, "1"="AN", "2"="BN", "3"="BED", "4"="OSFED", "5"="ARFID", "6"="NoDx")
+table(data3$CurrentDX2)
+data3$CurrentDX2 <- recode(data3$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
+
+table(data4$dx)
+data4$dx <- recode(data4$dx, "1"="AN", "2"="BN", "3"="BED", "4"="OSFED")
+
+table(data5$dx)
+data5$dx <- recode(data5$dx, "1"="AN", "2"="BN", "4"="OSFED", "6"="NoDx")
+table(data5$CurrentDX2)
+data5$CurrentDX2 <- recode(data5$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "6"="AANBP", "7"="AANR", "8"="ABNP",  "12"="ARFID")
+
+table(data6$CurrentDX2)
+data6$CurrentDX2 <- recode(data6$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "6"="AANBP", "7"="AANR")
+table(data6$dx, useNA = "ifany")
+data6$dx <- recode(data6$dx, "1"="AN", "2"="BN", "4"="OSFED")
+
+table(data6$dx)
+
+table(data7$dx)
+data7$dx <- recode(data7$dx, "1"="AN", "2"="BN", "3"="BED", "4"="OSFED", "6"="NoDx")
+table(data7$CurrentDX2)
+data7$CurrentDX2 <- recode(data7$CurrentDX2, "1"="ANBP", "2"="ANR", "3"="BNP", "4"="BNNP", "5"="BED", "6"="AANBP", "7"="AANR", "8"="ABNP", "9"="ABNNP", "10"="ABED", "11"="POSFED", "12"="ARFID", "13"="NoDx")
+```
+
+# check again
+```{r}
+demo1 <- names(data1[1:18])
+demo2 <- names(data2[c(1:20, ncol(data2))])
+demo3 <- names(data3[c(1:19)])
+demo4 <- names(data4[1:18])
+demo5 <- names(data5[1:19])
+demo6 <- names(data6[1:21])
+demo7 <- names(data7[1:21])
+Reduce(intersect, list(demo1, demo2, demo3, demo4, demo5, demo6, demo7))
+```
+
+# keep only AN/AAN
+
+Across all 7 datasets, I recode numeric diagnoses as characters. Then I keep only participants with a diagnosis of AN or AAN.
+```{r results='hide'}
+#### dh3 ####
+dim(data1) # 147 x 214
+table(data1$CurrentDX2, useNA = "ifany")
+data1 <- data1 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
+dim(data1) # 86 x 214
+
+#### pt ####
+dim(data2) # 75 x 267
+table(data2$CurrentDX2, useNA = "ifany")
+data2 <- data2 %>% filter(CurrentDX2=="AAN" | CurrentDX2=="ANR"| CurrentDX2=="AN-BP")
+dim(data2) # 33
+data2 <- data2 %>% sjmisc::move_columns("dx", "CurrentDX2", .after=height)
+
+#### online ie ####
+dim(data3) # 229 x 272
+table(data3$CurrentDX2, useNA = "ifany")
+data3 <- data3 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
+dim(data3) # 127
+
+#### in vivo ####
+dim(data4) # 37 x 272
+table(data4$dx, useNA = "ifany")
+data4 <- data4 %>% filter(dx=="AN" | dx=="OSFED")
+dim(data4) # 28
+
+#### r15 ####
+dim(data5) # 99 x 231
+table(data5$CurrentDX2, useNA = "ifany")
+data5 <- data5 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
+dim(data5) # 75
+
+#### rps ####
+dim(data6) # 99 x 250
+table(data6$CurrentDX2, useNA = "ifany") # expecting to lose 14
+data6 <- data6 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
+dim(data6) # 85
+data6 <- data6 %>% relocate(dx, .before = CurrentDX2)
+
+#### cs ####
+dim(data7) # 41 x 307
+table(data7$CurrentDX2, useNA = "ifany")
+data7 <- data7 %>% filter(CurrentDX2=="ANR" | CurrentDX2=="ANBP"| CurrentDX2=="AANR"| CurrentDX2=="AANBP")
+dim(data7) # 27
+```
+
+# missingness by dataset
+
+In this section I examine item-level missingness of measures (i.e., not including demos) by dataset. 
+
+## dat 1 dh3
+```{r}
+# names(data1)
+data1_noscales <- data1[-c(1:18)] 
+dim(data1_noscales) 
+round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100, 2) # 0.61%
+
+### ind people completely missing ###
+data1_noscales[rowSums(is.na(data1_noscales))==ncol(data1_noscales),] # no one has completely missing data
+```
+
+## dat 2 pt
+```{r}
+# names(data2)
+data2_noscales <- data2[-c(1:22)] 
+round(sum(is.na(data2_noscales))/prod(dim(data2_noscales))*100, 2) # 1.48
+dim(data2_noscales)
+
+data2_noscales[rowSums(is.na(data2_noscales))==ncol(data2_noscales),] # 0
+```
+
+## dat 3 oie
+```{r}
+# names(data3)
+data3_noscales <- data3[-c(1,3:20)] 
+dim(data3_noscales) 
+round(sum(is.na(data3_noscales))/prod(dim(data3_noscales))*100, 2) # 10.60%
+
+data3_noscales[rowSums(is.na(data3_noscales))==ncol(data3_noscales)-1,] # 11
+allmiss_oie <- data3_noscales[rowSums(is.na(data3_noscales))==ncol(data3_noscales)-1,] %>% select(1) %>% unlist
+
+dat3_nocomplmiss <-data3_noscales[rowSums(is.na(data3_noscales))<ncol(data3_noscales)-1,]
+```
+
+## dat 4 in vivo
+```{r}
+# names(data4)
+
+data4_noscales <- data4[-c(1,3:18)] 
+dim(data4_noscales) 
+round(sum(is.na(data4_noscales))/prod(dim(data4_noscales))*100, 2) # 9.17
+
+data4_noscales[rowSums(is.na(data4_noscales))==ncol(data4_noscales)-1,] 
+allmiss_invivo <- data4_noscales[rowSums(is.na(data4_noscales))==ncol(data4_noscales)-1,] %>% select(1) %>% unlist
+# V026, V028
+
+dat4_nocomplmiss <-data4_noscales[rowSums(is.na(data4_noscales))<ncol(data3_noscales)-1,]
+```
+
+## dat 5 r15
+```{r}
+# names(data5)
+dim(data5)
+data5_noscales <- data5[-c(1:19)]
+dim(data5_noscales)
+round(sum(is.na(data5_noscales))/prod(dim(data5_noscales))*100, 2) # 0.79
+data5_noscales[rowSums(is.na(data5_noscales))==ncol(data5_noscales),] # 0
+```
+
+## dat 6 rps
+```{r}
+# names(data6)
+dim(data6)
+data6_noscales <- data6[-c(1:21)] 
+dim(data6_noscales) 
+round(sum(is.na(data6_noscales))/prod(dim(data6_noscales))*100, 2) # 3.06
+
+data6_noscales[rowSums(is.na(data6_noscales))==ncol(data6_noscales),] # 0
+```
+
+## dat 7 cs
+```{r}
+# names(data7)
+dim(data7)
+data7_noscales <- data7[-c(1:21)] 
+dim(data7_noscales) 
+round(sum(is.na(data7_noscales))/prod(dim(data7_noscales))*100, 2) # 7.94
+
+data7_noscales[rowSums(is.na(data7_noscales))==ncol(data7_noscales),] # 0
+```
+
+## all
+
+item-level missingness datasets combined.
+
+```{r}
+{sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(data3_noscales)), sum(is.na(data4_noscales)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
+{sum(
+(dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(data3_noscales)[1]*dim(data3_noscales)[2]), (dim(data4_noscales)[1]*dim(data4_noscales)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )} 
+
+# 0.04944371, so 4.9% missing
+```
+
+### if you remove the completely missing people
+
+Here, I look at missingness when we remove people who have zero measurs completed.
+
+```{r}
+round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(dat3_nocomplmiss)), sum(is.na(dat4_nocomplmiss)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
+{sum(
+(dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(dat3_nocomplmiss)[1]*dim(dat3_nocomplmiss)[2]), (dim(dat4_nocomplmiss)[1]*dim(dat4_nocomplmiss)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )} *100, 2)
+# 2.61% missing
+```
+
 
 # EDE-Q
 
@@ -557,242 +987,183 @@ Because we have the EDE-Q 4 and EDE-Q 6, I score the EDE-Q before merging. After
 
 ### dh3
 ```{r results='hold'}
-# data1[grepl("^ede", colnames(data1))]
-# remove subscale scores
-data1 <- data1[!grepl("^edeq4", colnames(data1))]
-
 data1$edeq4_restraint <- rowMeans(sapply(data1[,c("ede_q_1", "ede_q_2", "ede_q_3", "ede_q_4", "ede_q_11")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data1[,c("ede_q_1", "ede_q_2", "ede_q_3", "ede_q_4", "ede_q_11")]))
-
-# check to see if values make sense
-describe(data1$edeq4_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data1$edeq4_ec <- rowMeans(sapply(data1[,c("ede_q_5", "ede_q_6", "ede_q_9", "ede_q_16", "ede_q_38")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data1[,c("ede_q_5", "ede_q_6", "ede_q_9", "ede_q_16", "ede_q_38")]))
 
-# check to see if values make sense
-describe(data1$edeq4_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data1$edeq4_sc <- rowMeans(sapply(data1[,c("ede_q_10", "ede_q_12", "ede_q_13", "ede_q_14", "ede_q_33", "ede_q_36", "ede_q_39", "ede_q_40")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data1[,c("ede_q_10", "ede_q_12", "ede_q_13", "ede_q_14", "ede_q_33", "ede_q_36", "ede_q_39", "ede_q_40")]))
- 
-# check to see if values make sense
-describe(data1$edeq4_sc) # good
 
 # Weight Concern: 12, 15, 32, 34, 35
 data1$edeq4_wc <- rowMeans(sapply(data1[,c("ede_q_12", "ede_q_15", "ede_q_32", "ede_q_34", "ede_q_35")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data1[,c("ede_q_12", "ede_q_15", "ede_q_32", "ede_q_34", "ede_q_35")]))
  
-# check to see if values make sense
-describe(data1$edeq4_wc) # good
- 
 # global score
 data1$edeq4_global <- rowMeans(sapply(data1[,c("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data1[,c("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc")]))
-describe(data1$edeq4_global) # good
+
+describe(data1[grepl("edeq4", colnames(data1))]) # good
 ```
 
 ### pt
 ```{r results='hold'}
-# data2[grepl("^ede", colnames(data2))]
-# remove subscale scores
-data2 <- data2[!grepl("^edeq6_\\D", colnames(data2))]
-
 data2$edeq6_restraint <- rowMeans(data2[,which(names(data2)=="edeq6_1"):which(names(data2)=="edeq6_5")], na.rm=TRUE)*NA^!rowMeans(!is.na(data2[,which(names(data2)=="edeq6_1"):which(names(data2)=="edeq6_5")])) 
-
-# check to see if values make sense
-describe(data2$edeq6_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data2$edeq6_ec <- rowMeans(data2[,c(which(names(data2)=="edeq6_7"), which(names(data2)=="edeq6_9"), which(names(data2)=="edeq6_19"), which(names(data2)=="edeq6_21"), which(names(data2)=="edeq6_20"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data2[,c(which(names(data2)=="edeq6_7"), which(names(data2)=="edeq6_9"), which(names(data2)=="edeq6_19"), which(names(data2)=="edeq6_21"), which(names(data2)=="edeq6_20"))])) 
 
-# check to see if values make sense
-describe(data2$edeq6_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data2$edeq6_sc <- rowMeans(data2[,c(which(names(data2)=="edeq6_6"), which(names(data2)=="edeq6_8"), which(names(data2)=="edeq6_23"), which(names(data2)=="edeq6_10"), which(names(data2)=="edeq6_26"), which(names(data2)=="edeq6_27"), which(names(data2)=="edeq6_28"), which(names(data2)=="edeq6_11"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data2[,c(which(names(data2)=="edeq6_6"), which(names(data2)=="edeq6_8"), which(names(data2)=="edeq6_23"), which(names(data2)=="edeq6_10"), which(names(data2)=="edeq6_26"), which(names(data2)=="edeq6_27"), which(names(data2)=="edeq6_28"), which(names(data2)=="edeq6_11"))])) 
- 
-# check to see if values make sense
-describe(data2$edeq6_sc) # good
 
 # Weight Concern: 12, 15, 32, 34, 35
 data2$edeq6_wc <- rowMeans(data2[,c(which(names(data2)=="edeq6_22"), which(names(data2)=="edeq6_24"), which(names(data2)=="edeq6_8"), which(names(data2)=="edeq6_25"), which(names(data2)=="edeq6_12"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data2[,c(which(names(data2)=="edeq6_22"), which(names(data2)=="edeq6_24"), which(names(data2)=="edeq6_8"), which(names(data2)=="edeq6_25"), which(names(data2)=="edeq6_12"))])) 
  
-# check to see if values make sense
-describe(data2$edeq6_wc) # good
- 
 # global score
 data2$edeq6_global <- rowMeans(sapply(data2[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data2[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")]))
-describe(data2$edeq6_global) # good
+
+describe(data2[grepl("edeq6", colnames(data2))]) # good
 ```
 
 ### online ie
 ```{r results='hold'}
-# data3[grepl("^ede", colnames(data3))]
-# remove subscale scores
-data3 <- data3[!grepl("^edeq4", colnames(data3))]
-
 data3$edeq4_restraint <- rowMeans(sapply(data3[,c("ede_q_1", "ede_q_2", "ede_q_3", "ede_q_4", "ede_q_11")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data3[,c("ede_q_1", "ede_q_2", "ede_q_3", "ede_q_4", "ede_q_11")]))
-
-# check to see if values make sense
-describe(data3$edeq4_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data3$edeq4_ec <- rowMeans(sapply(data3[,c("ede_q_5", "ede_q_6", "ede_q_9", "ede_q_16", "ede_q_38")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data3[,c("ede_q_5", "ede_q_6", "ede_q_9", "ede_q_16", "ede_q_38")]))
 
-# check to see if values make sense
-describe(data3$edeq4_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data3$edeq4_sc <- rowMeans(sapply(data3[,c("ede_q_10", "ede_q_12", "ede_q_13", "ede_q_14", "ede_q_33", "ede_q_36", "ede_q_39", "ede_q_40")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data3[,c("ede_q_10", "ede_q_12", "ede_q_13", "ede_q_14", "ede_q_33", "ede_q_36", "ede_q_39", "ede_q_40")]))
  
-# check to see if values make sense
-describe(data3$edeq4_sc) # good
-
 # Weight Concern: 12, 15, 32, 34, 35
 data3$edeq4_wc <- rowMeans(sapply(data3[,c("ede_q_12", "ede_q_15", "ede_q_32", "ede_q_34", "ede_q_35")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data3[,c("ede_q_12", "ede_q_15", "ede_q_32", "ede_q_34", "ede_q_35")]))
  
-# check to see if values make sense
-describe(data3$edeq4_wc) # good
- 
 # global score
 data3$edeq4_global <- rowMeans(sapply(data3[,c("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data3[,c("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc")]))
-describe(data3$edeq4_global) # good
+
+describe(data3[grepl("edeq4", colnames(data3))]) # good
 ```
 
 ### in vivo
 ```{r results='hold'}
-# data4[grepl("^ede", colnames(data4))]
-# remove subscale scores
-data4 <- data4[!grepl("^edeq4", colnames(data4))]
-
 data4$edeq4_restraint <- rowMeans(sapply(data4[,c("ede_q_1", "ede_q_2", "ede_q_3", "ede_q_4", "ede_q_11")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data4[,c("ede_q_1", "ede_q_2", "ede_q_3", "ede_q_4", "ede_q_11")]))
-
-# check to see if values make sense
-describe(data4$edeq4_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data4$edeq4_ec <- rowMeans(sapply(data4[,c("ede_q_5", "ede_q_6", "ede_q_9", "ede_q_16", "ede_q_38")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data4[,c("ede_q_5", "ede_q_6", "ede_q_9", "ede_q_16", "ede_q_38")]))
 
-# check to see if values make sense
-describe(data4$edeq4_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data4$edeq4_sc <- rowMeans(sapply(data4[,c("ede_q_10", "ede_q_12", "ede_q_13", "ede_q_14", "ede_q_33", "ede_q_36", "ede_q_39", "ede_q_40")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data4[,c("ede_q_10", "ede_q_12", "ede_q_13", "ede_q_14", "ede_q_33", "ede_q_36", "ede_q_39", "ede_q_40")]))
  
-# check to see if values make sense
-describe(data4$edeq4_sc) # good
-
 # Weight Concern: 12, 15, 32, 34, 35
 data4$edeq4_wc <- rowMeans(sapply(data4[,c("ede_q_12", "ede_q_15", "ede_q_32", "ede_q_34", "ede_q_35")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data4[,c("ede_q_12", "ede_q_15", "ede_q_32", "ede_q_34", "ede_q_35")]))
  
-# check to see if values make sense
-describe(data4$edeq4_wc) # good
- 
 # global score
 data4$edeq4_global <- rowMeans(sapply(data4[,c("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data4[,c("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc")]))
-describe(data4$edeq4_global) # good
+
+describe(data4[grepl("edeq4", colnames(data4))]) # good
 ```
 
 ### r15
 ```{r results='hold'}
 data5 <- data5 %>% rename(edeq6_21=edeq21) %>% relocate(edeq6_21, .after = edeq6_20)
-# data5[grepl("^ede", colnames(data5))]
-# remove subscale scores
-data5 <- data5[!grepl("^edeq6_\\D", colnames(data5))]
 
 data5$edeq6_restraint <- rowMeans(data5[,which(names(data5)=="edeq6_1"):which(names(data5)=="edeq6_5")], na.rm=TRUE)*NA^!rowMeans(!is.na(data5[,which(names(data5)=="edeq6_1"):which(names(data5)=="edeq6_5")])) 
-
-# check to see if values make sense
-describe(data5$edeq6_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data5$edeq6_ec <- rowMeans(data5[,c(which(names(data5)=="edeq6_7"), which(names(data5)=="edeq6_9"), which(names(data5)=="edeq6_19"), which(names(data5)=="edeq6_21"), which(names(data5)=="edeq6_20"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data5[,c(which(names(data5)=="edeq6_7"), which(names(data5)=="edeq6_9"), which(names(data5)=="edeq6_19"), which(names(data5)=="edeq6_21"), which(names(data5)=="edeq6_20"))])) 
 
-# check to see if values make sense
-describe(data5$edeq6_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data5$edeq6_sc <- rowMeans(data5[,c(which(names(data5)=="edeq6_6"), which(names(data5)=="edeq6_8"), which(names(data5)=="edeq6_23"), which(names(data5)=="edeq6_10"), which(names(data5)=="edeq6_26"), which(names(data5)=="edeq6_27"), which(names(data5)=="edeq6_28"), which(names(data5)=="edeq6_11"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data5[,c(which(names(data5)=="edeq6_6"), which(names(data5)=="edeq6_8"), which(names(data5)=="edeq6_23"), which(names(data5)=="edeq6_10"), which(names(data5)=="edeq6_26"), which(names(data5)=="edeq6_27"), which(names(data5)=="edeq6_28"), which(names(data5)=="edeq6_11"))])) 
  
-# check to see if values make sense
-describe(data5$edeq6_sc) # good
-
 # Weight Concern: 12, 15, 32, 34, 35
 data5$edeq6_wc <- rowMeans(data5[,c(which(names(data5)=="edeq6_22"), which(names(data5)=="edeq6_24"), which(names(data5)=="edeq6_8"), which(names(data5)=="edeq6_25"), which(names(data5)=="edeq6_12"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data5[,c(which(names(data5)=="edeq6_22"), which(names(data5)=="edeq6_24"), which(names(data5)=="edeq6_8"), which(names(data5)=="edeq6_25"), which(names(data5)=="edeq6_12"))])) 
  
-# check to see if values make sense
-describe(data5$edeq6_wc) # good
- 
 # global score
 data5$edeq6_global <- rowMeans(sapply(data5[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data5[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")]))
-describe(data5$edeq6_global) # good
+
+describe(data5[grepl("edeq6_\\D", colnames(data5))]) # good
 ```
 
 ### rps
 ```{r results='hold'}
-# data6[grepl("^ede", colnames(data6))]
-# remove subscale scores
-data6 <- data6[!grepl("^edeq6_\\D", colnames(data6))]
-
 data6$edeq6_restraint <- rowMeans(data6[,which(names(data6)=="edeq6_1"):which(names(data6)=="edeq6_5")], na.rm=TRUE)*NA^!rowMeans(!is.na(data6[,which(names(data6)=="edeq6_1"):which(names(data6)=="edeq6_5")])) 
-
-# check to see if values make sense
-describe(data6$edeq6_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data6$edeq6_ec <- rowMeans(data6[,c(which(names(data6)=="edeq6_7"), which(names(data6)=="edeq6_9"), which(names(data6)=="edeq6_19"), which(names(data6)=="edeq6_21"), which(names(data6)=="edeq6_20"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data6[,c(which(names(data6)=="edeq6_7"), which(names(data6)=="edeq6_9"), which(names(data6)=="edeq6_19"), which(names(data6)=="edeq6_21"), which(names(data6)=="edeq6_20"))])) 
 
-# check to see if values make sense
-describe(data6$edeq6_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data6$edeq6_sc <- rowMeans(data6[,c(which(names(data6)=="edeq6_6"), which(names(data6)=="edeq6_8"), which(names(data6)=="edeq6_23"), which(names(data6)=="edeq6_10"), which(names(data6)=="edeq6_26"), which(names(data6)=="edeq6_27"), which(names(data6)=="edeq6_28"), which(names(data6)=="edeq6_11"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data6[,c(which(names(data6)=="edeq6_6"), which(names(data6)=="edeq6_8"), which(names(data6)=="edeq6_23"), which(names(data6)=="edeq6_10"), which(names(data6)=="edeq6_26"), which(names(data6)=="edeq6_27"), which(names(data6)=="edeq6_28"), which(names(data6)=="edeq6_11"))])) 
- 
-# check to see if values make sense
-describe(data6$edeq6_sc) # good
 
 # Weight Concern: 12, 15, 32, 34, 35
 data6$edeq6_wc <- rowMeans(data6[,c(which(names(data6)=="edeq6_22"), which(names(data6)=="edeq6_24"), which(names(data6)=="edeq6_8"), which(names(data6)=="edeq6_25"), which(names(data6)=="edeq6_12"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data6[,c(which(names(data6)=="edeq6_22"), which(names(data6)=="edeq6_24"), which(names(data6)=="edeq6_8"), which(names(data6)=="edeq6_25"), which(names(data6)=="edeq6_12"))])) 
- 
-# check to see if values make sense
-describe(data6$edeq6_wc) # good
- 
+
 # global score
 data6$edeq6_global <- rowMeans(sapply(data6[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data6[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")]))
-describe(data6$edeq6_global) # good
+
+describe(data6[grepl("edeq6_\\D", colnames(data6))]) # good
 ```
 
 ### cs
 ```{r results='hold'}
-# data7[grepl("^ede", colnames(data7))]
-# remove subscale scores
-data7 <- data7[!grepl("^edeq6_\\D", colnames(data7))]
-
 data7$edeq6_restraint <- rowMeans(data7[,which(names(data7)=="edeq6_1"):which(names(data7)=="edeq6_5")], na.rm=TRUE)*NA^!rowMeans(!is.na(data7[,which(names(data7)=="edeq6_1"):which(names(data7)=="edeq6_5")])) 
-
-# check to see if values make sense
-describe(data7$edeq6_restraint) # 0-6 good
 
 # eating concern subscale 	# items 5, 6, 9, 16, 38
 data7$edeq6_ec <- rowMeans(data7[,c(which(names(data7)=="edeq6_7"), which(names(data7)=="edeq6_9"), which(names(data7)=="edeq6_19"), which(names(data7)=="edeq6_21"), which(names(data7)=="edeq6_20"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data7[,c(which(names(data7)=="edeq6_7"), which(names(data7)=="edeq6_9"), which(names(data7)=="edeq6_19"), which(names(data7)=="edeq6_21"), which(names(data7)=="edeq6_20"))])) 
 
-# check to see if values make sense
-describe(data7$edeq6_ec)
-
 # Shape Concern: 10, 12, 13, 14, 33, 36, 39, 40
 data7$edeq6_sc <- rowMeans(data7[,c(which(names(data7)=="edeq6_6"), which(names(data7)=="edeq6_8"), which(names(data7)=="edeq6_23"), which(names(data7)=="edeq6_10"), which(names(data7)=="edeq6_26"), which(names(data7)=="edeq6_27"), which(names(data7)=="edeq6_28"), which(names(data7)=="edeq6_11"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data7[,c(which(names(data7)=="edeq6_6"), which(names(data7)=="edeq6_8"), which(names(data7)=="edeq6_23"), which(names(data7)=="edeq6_10"), which(names(data7)=="edeq6_26"), which(names(data7)=="edeq6_27"), which(names(data7)=="edeq6_28"), which(names(data7)=="edeq6_11"))])) 
  
-# check to see if values make sense
-describe(data7$edeq6_sc) # good
-
 # Weight Concern: 12, 15, 32, 34, 35
 data7$edeq6_wc <- rowMeans(data7[,c(which(names(data7)=="edeq6_22"), which(names(data7)=="edeq6_24"), which(names(data7)=="edeq6_8"), which(names(data7)=="edeq6_25"), which(names(data7)=="edeq6_12"))], na.rm=TRUE)*NA^!rowMeans(!is.na(data7[,c(which(names(data7)=="edeq6_22"), which(names(data7)=="edeq6_24"), which(names(data7)=="edeq6_8"), which(names(data7)=="edeq6_25"), which(names(data7)=="edeq6_12"))])) 
  
-# check to see if values make sense
-describe(data7$edeq6_wc) # good
- 
 # global score
 data7$edeq6_global <- rowMeans(sapply(data7[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(data7[,c("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc")]))
-describe(data7$edeq6_global) # good
+
+describe(data7[grepl("edeq6_\\D", colnames(data7))]) # good
 ```
+
+# recode bdi prior to merge
+rescore 15 and 17 for nonclinical and 16 and 18 for clinical
+```{r}
+names(data1[grepl("^bdi", colnames(data1))]) # nonclinical
+describe(data1[c(which(colnames(data1)=="bdi_15"), which(colnames(data1)=="bdi_17"))])
+
+data1$bdi_15 <- dplyr::recode(data1$bdi_15, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+data1$bdi_17 <- dplyr::recode(data1$bdi_17, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+
+names(data2[grepl("^bdi", colnames(data2))]) # clinical
+describe(data2[c(which(colnames(data2)=="bdi_16"), which(colnames(data2)=="bdi_18"))])
+
+data2$bdi_16 <- dplyr::recode(data2$bdi_16, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+data2$bdi_18 <- dplyr::recode(data2$bdi_18, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+
+names(data3[grepl("^bdi", colnames(data3))]) # nonclinical
+describe(data3[c(which(colnames(data3)=="bdi_15"), which(colnames(data3)=="bdi_17"))]) # weird max is 1
+describe(data3[grepl("^bdi", colnames(data3))]) # others have a range. well 0's stay 0's and one's and twos stay 1's so it's fine
+
+names(data4[grepl("^bdi", colnames(data4))]) # nonclinical
+describe(data4[c(which(colnames(data4)=="bdi_15"), which(colnames(data4)=="bdi_17"))])
+
+data4$bdi_15 <- dplyr::recode(data4$bdi_15, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+data4$bdi_17 <- dplyr::recode(data4$bdi_17, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+
+names(data5[grepl("^bdi", colnames(data5))]) # clinical
+describe(data5[c(which(colnames(data5)=="bdi_16"), which(colnames(data5)=="bdi_18"))])
+
+data5$bdi_16 <- dplyr::recode(data5$bdi_16, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+data5$bdi_18 <- dplyr::recode(data5$bdi_18, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+
+names(data6[grepl("^bdi", colnames(data6))]) # clinical
+describe(data6[c(which(colnames(data6)=="bdi_16"), which(colnames(data6)=="bdi_18"))])
+
+data6$bdi_16 <- dplyr::recode(data6$bdi_16, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+data6$bdi_18 <- dplyr::recode(data6$bdi_18, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+
+names(data7[grepl("^bdi", colnames(data7))]) # clinical
+describe(data7[c(which(colnames(data7)=="bdi_16"), which(colnames(data7)=="bdi_18"))])
+
+data7$bdi_16 <- dplyr::recode(data7$bdi_16, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+data7$bdi_18 <- dplyr::recode(data7$bdi_18, `0`=0, `1`=1, `2`=1, `3`=2, `4`=2, `5`=3, `6`=3)
+```
+
 
 # dat combined
 
@@ -800,20 +1171,15 @@ Here, I combine all 7 dats into one object. Then, I remove 13 participants with 
 
 ```{r}
 dat <- plyr::rbind.fill(data1, data2, data3, data4, data5, data6, data7)
-dim(dat) # 460 x 327
+dim(dat) # 461 x 337
 remove <- c(allmiss_oie, allmiss_invivo) # completely missing dat
 # length(remove) # removed 13
 
 dat <- dat[-which(dat$participant_id %in% remove), ] # remove them
-dim(dat) # 447 327
-# create study variable
-# dat[grepl("^PR", dat$participant_id),]
-# dat$study <- ifelse(grepl("^DH", dat$participant_id), "DH3",
-#                     ifelse(grepl("^PT", dat$participant_id), "PT",
-#                            ifelse(grepl("^IE", dat$participant_id), "IE",
-#                                   ifelse(grepl("^V", dat$participant_id), "invivo",
-#                                          ifelse(grepl("^PR", dat$participant_id), "r15",
-#                                                 ifelse(grepl("^RPS", dat$participant_id), "RPS", "CS"))))))
+dim(dat) # 448 337
+
+# another check
+table(dat$CurrentDX2) # data4 doesn't have specifiers for AAN
 ```
 
 # scoring
@@ -831,8 +1197,6 @@ describe(dat$bdi_total)
 
 ## fmps
 ```{r results='hold'}
-# names(dat[grepl("^fmps", colnames(dat))]) # good
-
 dat$fmps_com <- rowSums(sapply(dat[,c("fmps_9", "fmps_10", "fmps_13", "fmps_14", "fmps_18", "fmps_21", "fmps_23", "fmps_25", "fmps_34")], as.numeric), na.rm=TRUE)*NA^!rowSums(!is.na(dat[,c("fmps_9", "fmps_10", "fmps_13", "fmps_14", "fmps_18", "fmps_21", "fmps_23", "fmps_25", "fmps_34")]))
 
 dat$fmps_da <- rowSums(sapply(dat[,c("fmps_17", "fmps_28", "fmps_32", "fmps_33")], as.numeric), na.rm=TRUE)*NA^!rowSums(!is.na(dat[,c("fmps_17", "fmps_28", "fmps_32", "fmps_33")]))
@@ -851,15 +1215,12 @@ describe(dat[grepl("fmps_\\D", colnames(dat))])
 ## fof
 ```{r results='hold'}
 # names(dat[grepl("^fof", colnames(dat))])
-dat <- dat[!grepl("^fof_sc", colnames(dat))] # items not used for scales
 # anxiety about eating
 dat$fofm_ae <- rowSums(dat[c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("fof_1", "fof_2", "fof_3", "fof_4", "fof_5", "fof_6", "fof_7", "fof_8")]))
 # food anxiety behaviors
 dat$fofm_fab <- rowSums(dat[c("fof_9", "fof_10", "fof_11", "fof_13", "fof_15", "fof_16")], na.rm=TRUE)**NA^!rowSums(!is.na(dat[,c("fof_9", "fof_10", "fof_11", "fof_13", "fof_15", "fof_16")]))
 # food concerns
 dat$fofm_fc <- rowSums(dat[c(which(colnames(dat)=="fof_17"):which(colnames(dat)=="fof_25"))], na.rm=TRUE)**NA^!rowSums(!is.na(dat[c(which(colnames(dat)=="fof_17"):which(colnames(dat)=="fof_25"))]))
-
-describe(dat[c(which(colnames(dat)=="fofm_ae"), which(colnames(dat)=="fofm_fab"), which(colnames(dat)=="fofm_fc"))]) # good
 
 dat$fofm_global <- rowSums(dat[c("fofm_ae", "fofm_fab", "fofm_fc")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("fofm_ae", "fofm_fab", "fofm_fc")]))
 
@@ -896,7 +1257,8 @@ describe(dat[grepl("oci_\\D", colnames(dat))])
 
 ## saas
 ```{r}
-# 1 is already reverse coded can check with something like data1 %>% select(saas_1, saas_1r)
+dat$saas_1r <- dplyr::recode(dat$saas_1, `1`=5, `2`=4, `3`=3, `4`=2, `5`=1)
+dat <- dat %>% relocate(saas_1r, .after = saas_1)
 # names(dat[grepl("^saas", colnames(dat))])
 
 dat$saas_total <- rowSums(dat[c("saas_1r", "saas_2", "saas_3", "saas_4", "saas_5", "saas_6", "saas_7", "saas_8", "saas_9", "saas_10", "saas_11", "saas_12", "saas_13", "saas_14", "saas_15", "saas_16")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("saas_1r", "saas_2", "saas_3", "saas_4", "saas_5", "saas_6", "saas_7", "saas_8", "saas_9", "saas_10", "saas_11", "saas_12", "saas_13", "saas_14", "saas_15", "saas_16")]))
@@ -908,6 +1270,19 @@ describe(dat$saas_total)
 ## pswq
 r15 missing pswq; RPS 10 item version
 ```{r}
+dat <- dat %>%
+  mutate(pswq1r = dplyr::recode(pswq_1, `1`=5, `2`=4, `3`=3, `4`=2, `5`=1))  %>%
+  mutate(pswq3r = dplyr::recode(pswq_3, `1`=5, `2`=4, `3`=3, `4`=2, `5`=1))  %>%
+  mutate(pswq8r = dplyr::recode(pswq_8, `1`=5, `2`=4, `3`=3, `4`=2, `5`=1))  %>%
+  mutate(pswq10r = dplyr::recode(pswq_10, `1`=5, `2`=4, `3`=3, `4`=2, `5`=1)) %>%
+  mutate(pswq11r = dplyr::recode(pswq_11, `1`=5, `2`=4, `3`=3, `4`=2, `5`=1))
+
+dat <- dat %>% 
+  relocate(pswq1r, .after = pswq_1) %>% 
+  relocate(pswq3r, .after = pswq_3) %>% 
+  relocate(pswq8r, .after = pswq_8) %>% 
+  relocate(pswq10r, .after = pswq_10) %>% 
+  relocate(pswq11r, .after = pswq_11)
 # names(dat[grepl("^pswq", colnames(dat))]) 
 
 dat$pswq_total <- rowSums(dat[c("pswq1r", "pswq_2", "pswq3r", "pswq_4", "pswq_5", "pswq_6", "pswq_7", "pswq8r", "pswq_9", "pswq10r", "pswq11r", "pswq_12", "pswq_13", "pswq_14", "pswq_15", "pswq_16")], na.rm = TRUE)*NA^!rowSums(!is.na(dat[,c("pswq1r", "pswq_2", "pswq3r", "pswq_4", "pswq_5", "pswq_6", "pswq_7", "pswq8r", "pswq_9", "pswq10r", "pswq11r", "pswq_12", "pswq_13", "pswq_14", "pswq_15", "pswq_16")]))
@@ -917,8 +1292,6 @@ describe(dat$pswq_total)
 
 ## efq
 ```{r results='hold'}
-# names(dat[grepl("^efq", colnames(dat))])
-# Subscales:
 # Fear of weight gain: efq items 1,2. 
 dat$efq_wtgain <- rowMeans(sapply(dat[,c("efq_1", "efq_2")], as.numeric), na.rm=TRUE)*NA^!rowMeans(!is.na(dat[,c("efq_1", "efq_2")]))
 
@@ -1041,7 +1414,7 @@ describe(dat[c(which(colnames(dat)=="edeq_global"), which(colnames(dat)=="edeq_e
 dat %>% filter(is.na(bdi_total)) %>% select(participant_id,starts_with("bdi")) # 10
 
 #### check plausible values ####
-describe(dat$bdi_total) # 0-57 okay
+describe(dat$bdi_total) # 0-55 okay
 ```
 
 ## FOFM 
@@ -1174,13 +1547,100 @@ dat %>% filter((study=="PT" | study=="IE" | study == "invivo" | study == "RPS" |
 describe(dat$pclc_global)
 ```
 
-# diagnosis
+# dx again
+```{r}
+old <- read_csv("~/Dropbox/Research/Coauthor/anaan_ml/cleaning and combining datasets/ANAANcombined_cec_2023-06-29.csv")
+
+#### invivo ###
+dat4subset <- dat %>% filter(study=="invivo")
+dim(dat4subset) # 26
+oldsub <- old[which(dat$participant_id %in% dat4subset$participant_id),]
+# dat[!which(dat$participant_id %in% old$participant_id),]
+setdiff(dat$participant_id, old$participant_id) # V006
+# dat %>% filter(participant_id=="V006")
+# old %>% filter(participant_id=="V006")
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+# left_join(dat4subset, oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+# left_join(dat4subset, oldsub) %>% select(study, participant_id, dx_old, dx) # all match
+
+# left_join(dat4subset, oldsub) %>% select(study, participant_id, CurrentDX2, CurrentDX2_old) 
+specdx_dat4 <- left_join(dat4subset, oldsub) %>% select(CurrentDX2_old) %>% unlist() 
+# length(specdx_dat4)
+
+dat[which(dat$study=="invivo"), "CurrentDX2"] <- specdx_dat4
+
+# dat4subset <- dat %>% filter(study=="invivo")
+# left_join(dat4subset, oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+
+# data4_import %>% filter(participant_id=="V006") # atypical AN BP v skid
+dat[which(dat$participant_id=="V006"), "CurrentDX2"] <- "AANBP"
+# dat %>% filter(CurrentDX2=="AAN") %>% select(participant_id, dx, CurrentDX2)
+
+#### pt ####
+oldsub <- old[which(dat$study =="PT"),]
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+left_join(dat[which(dat$study=="PT"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+
+specdx_dat2 <- left_join(dat[which(dat$study=="PT"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(CurrentDX2_old) %>% unlist
+
+dat[which(dat$study=="PT"), "CurrentDX2"] <- specdx_dat2
+
+#### dh3 ####
+oldsub <- old[which(dat$study =="DH3"),]
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+left_join(dat[which(dat$study=="DH3"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+
+#### rps ####
+oldsub <- old[which(dat$study =="RPS"),]
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+left_join(dat[which(dat$study=="RPS"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+
+#### cs ####
+oldsub <- old[which(dat$study =="CS"),]
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+left_join(dat[which(dat$study=="CS"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+
+# dat %>% filter(participant_id=="CS044")
+
+#### PR ####
+oldsub <- old[which(dat$study =="PR"),]
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+left_join(dat[which(dat$study=="PR"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+
+
+#### online ie ####
+#### cs ####
+oldsub <- old[which(dat$study =="IE"),]
+colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
+oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
+
+left_join(dat[which(dat$study=="IE"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
+```
+
+## diagnosis
 
 Here I examine how many participants were diagnosed with AN and atypical AN. 215 participants had AAN (48.1%) and 232 participants had AN (51.9%). Specifiers are in the comments.
 
 ```{r results='hold'}
 table1(~dx+ CurrentDX2, data=dat,
     overall=c(left="Total"), caption="Diagnoses")
+dat %>% filter(dx=="AN-BP") %>% select(participant_id, dx, CurrentDX2)
+dat$dx <- ifelse(dat$dx=="AN-BP", "AN", dat$dx)
+
+dat %>% filter(dx=="OSFED") %>% select(study) %>% unique
+dat$dx <- dplyr::recode(dat$dx, "OSFED"="AAN")
 
 # chisq.test(dat$study, dat$dx, correct=TRUE) # p = 0.15
 df <- as.data.frame(matrix(nrow = 7,  ncol = 2))
@@ -1190,9 +1650,9 @@ names(df) <- c("AAN", "AN")
 rownames(df) <- unique(unlist(as.data.frame(table(dat$study, dat$dx))[1]))
 df <- as.matrix(df)
 chisq.test(df, correct=TRUE) # women v other
-# X-squared = 9.479, df = 6, p-value = 0.1484
+# X-squared = 17.914, df = 6, p-value = 0.006451
 rcompanion::cramerV(df, ci=TRUE) 
-# cramer's v = 0.1456, lower ci = 0.1003, upper.ci = 0.26
+# cramer's v = 0.2, lower ci = 0.1374, upper.ci = 0.3041
 ```
 
 
@@ -1201,19 +1661,13 @@ rcompanion::cramerV(df, ci=TRUE)
 Calculate more participant characteristics. Participants were around 30 years old, mostly white cis women.
 
 ```{r}
-describe(dat$age) # m = 30.36 (SD = 10.20, Range = 16-66)
+describe(dat$age) # m = 30.33 (SD = 10.20, Range = 16-66)
 dat %>% filter(age<18) # 3 onlineIE participants were under 18 (IE061, IE079, IE167)
 
-table(dat$sex, useNA = "ifany") # 1= 87, 2= 242, 3 = intersex?
+table(dat$sex, useNA = "ifany") 
+dat %>% filter(sex=="2") %>% select(study) %>% unique
 
 table(dat$ethnicity, useNA = "ifany")
-# "0" = "Indian or Alaskan Native", "1" = "Asian or Pacific Islander", 2 = "Black", "3" = "Hispanic", "4" = "Multi- or Bi-Racial", "5" = "White", "6" = "Not listed"
-dat$ethnicity <- ifelse(dat$ethnicity=="0", "Indian or Alaskan Native",
-                      ifelse(dat$ethnicity=="1", "Asian or Pacific Islander",
-                             ifelse(dat$ethnicity=="2", "Black",
-                                    ifelse(dat$ethnicity=="3", "Hispanic",
-                                           ifelse(dat$ethnicity=="4", "Multi- or Bi-Racial",
-                                                  ifelse(dat$ethnicity=="5", "White", "Not listed"))))))
 
 racetab <- as.data.frame(table(dat$ethnicity, useNA = "ifany"))
 names(racetab)[2] <- "count"
@@ -1223,38 +1677,112 @@ names(racetab)[c(1,3)] <- c("race", "perc")
 racetab
 ```
 
+# tidy cols
+remove gender_other, BMI 
+```{r}
+dat<-dat[-c(which(colnames(dat)=="gender_other"), which(colnames(dat)=="BMI"))]
+```
+
+# BMI
+```{r}
+dat$bmi <- dat$weight/(dat$height^2)*703
+dat <- dat %>% relocate(bmi, .after = height)
+describe(dat$bmi) # 0-46
+dat %>% filter(bmi <15) %>% select(participant_id, weight, height, bmi)
+# DH116 BMI 10 60 lbs
+# DH119 BMI 13
+data1 %>% filter(participant_id=="DH116"|participant_id=="DH119")
+# weird DH119 has OSFED dx AAN$. I think this person's height should be 65 instead of 75
+# View(data1_import %>% filter(participant_id=="DH116"))
+dat[which(dat$participant_id=="DH119"), "height"] <- 65
+# IE115 BMI 13
+# View(data3_import %>% filter(participant_id=="IE115")) # lowest weight 50
+# PR134 bmi 11
+# PR010 bmi 9
+# View(data5_import %>% filter(participant_id=="PR134"|participant_id=="PR010"))
+# both have v low wt histories
+# RPS081 bmi 0
+# View(data6_import %>% filter(participant_id=="RPS081"))
+# wt was entered as zero and ? later in eddi. lowest weight reported 85, highest wt reported 115
+# CS079
+# View(data7_import %>% filter(participant_id=="CS079"))
+dat$bmi <- dat$weight/(dat$height^2)*703
+# dat %>% filter(bmi==0) %>% select(participant_id, height, weight, bmi)
+dat$bmi <- ifelse(dat$bmi==0, NA, dat$bmi)
+describe(dat$bmi)
+```
+
 # move columns around
 
 Here I put columns in an order I like, so total and subscale scores immediately after the measure.
 
 ```{r results='hide'}
 names(dat)
-dat <- relocate(dat, study)
-dat <- dat %>% relocate(bdi_total, .after = bdi_20) %>% relocate(bdi_21, .before = bdi_total)
 
 dat <- dat %>%sjmisc::move_columns("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc", "edeq4_global", .after = ede_q_42) 
 
-dat <- dat %>% sjmisc::move_columns("fofm_ae", "fofm_fab", "fofm_fc", .after = fof_25) 
+dat <- dat %>% relocate(saas_total, .after = saas_16) %>% relocate(saas_1r, .after = saas_1)
 
 dat <- dat %>% sjmisc::move_columns("oci_wash", "oci_obsess", "oci_hoard", "oci_order", "oci_check", "oci_neut", "oci_global", .after = oci_18) 
 
-dat <- dat %>% relocate(saas_total, .after = saas_16) %>% relocate(saas_1r, .after = saas_1)
+dat <- dat %>% sjmisc::move_columns("fofm_ae", "fofm_fab", "fofm_fc", .after = fof_25) 
 
 dat <- dat %>% sjmisc::move_columns("fmps_com", "fmps_da", "fmps_pc", "fmps_pe", "fmps_ps", "fmps_total", .after = fmps_35) 
 
-dat %>% sjmisc::move_columns("pswq1r", "pswq3r", "pswq8r", "pswq10r", "pswq11r", .after = pswq_16) 
-dat <- dat %>% relocate(pswq_total, .after = pswq11r)
+dat <- dat %>% relocate(pswq_total, .after = pswq_16)
+
+dat <- dat %>% relocate(bdi_total, .after = bdi_20) %>% relocate(bdi_21, .before = bdi_total)
 
 # edeq6
-dat <- dat %>%sjmisc::move_columns("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc", "edeq6_global", .after = edeq6_33) 
+dat <- dat %>%sjmisc::move_columns(names(dat[grepl("edeq6", colnames(dat))]), .after = edeq4_global) 
 
+dat <- dat %>% sjmisc::move_columns("edeq6_restraint", "edeq6_ec", "edeq6_sc", "edeq6_wc", "edeq6_global", .after = edeq6_pill) 
+
+
+dat <- dat %>% sjmisc::move_columns("efq_wtgain", "efq_socialcons", "efq_personal", "efq_discomf", "efq_socialeat", .after = efq_20) 
+
+dat <- dat %>% sjmisc::move_columns("comorbities", "meds", "income", "marital_status", "smoking_status", .after = ethnicity_desc) 
+dat <- dat %>% rename(comorbidities = comorbities)
+dat <- dat[-which(colnames(dat)=="describe_sex_orient")]
 
 dat <- dat %>% sjmisc::move_columns("epsi_bodydis", "epsi_bingeeat", "epsi_cogrestraint", "epsi_purge", "epsi_restrict", "epsi_exercise", "epsi_negobesity", "epsi_muscle", .after = epsi_45) 
 
-dat <- dat %>% relocate(pclc_global, .after = pclc_17)
+dat <- dat[!grepl("efq_2[1, 2, 3, 4, 5, 6, 7, 8, 9]|efq_30", colnames(dat))]
 
-dat <- dat %>% sjmisc::move_columns("efq_wtgain", "efq_socialcons", "efq_personal", "efq_discomf", "efq_socialeat", .after = efq_20) 
+dat <- dat %>% relocate(pclc_global, .after = pclc_17)
+dat <- dat %>% relocate(fofm_global, .after = fofm_fc)
+
+dat <- dat %>% sjmisc::move_columns("dx", "CurrentDX2", "comorbidities", .after = weight) 
+dat <- dat %>% relocate(bmi, .after = weight)
 ```
+
+```{r}
+describe(dat[which(dat$dx=="AAN"), "bmi"]) # min 17.47 not good
+dat %>% filter(dx=="AAN" & bmi < 18.5)
+# DH016, IE004, PR128
+dat %>% filter(dx=="AAN" & bmi < 18.5) %>% select(participant_id, height, weight, bmi, dx, CurrentDX2) 
+
+data1 %>% filter(participant_id=="DH016") # should be AN, and ANBP
+data3 %>% filter(participant_id=="IE004") # should be AN, and ANR
+data5 %>% filter(participant_id=="PR128")  # should be AN and ANR
+
+dat[which(dat$participant_id=="DH016"), "dx"] <- "AN"
+dat[which(dat$participant_id=="DH016"), "CurrentDX2"] <- "ANBP"
+
+dat[which(dat$participant_id=="IE004"), "dx"] <- "AN"
+dat[which(dat$participant_id=="IE004"), "CurrentDX2"] <- "ANR"
+
+dat[which(dat$participant_id=="PR128"), "dx"] <- "AN"
+dat[which(dat$participant_id=="PR128"), "CurrentDX2"] <- "ANR"
+
+dat %>% filter(dx=="AN" & bmi > 18.5) %>% select(bmi)
+
+dat %>% filter(dx=="AN" & bmi > 18.5)
+describe(dat[which(dat$dx=="AN"), "bmi"])
+dat %>% filter(dx=="AN" & bmi > 18.5) # 84 rows
+# may be AN is partial partial remission
+```
+
 
 # visualize missingness
 ```{r warning=FALSE}
