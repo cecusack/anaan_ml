@@ -16,23 +16,23 @@ date: "2023-06-27"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-*measurement differences*
+**measurement differences**   
 - BDI: 
-  - non clinical (20 item): dh3, online ie, in vivo. rescored items 15 and 17
-  - clinical (21 item): pt, r15, RPS, CS. item 7 was removed. rescored items 16 and 18
-  - total score was calculated by summing all items except the suicidality item
-- EDE-Q:
-  - 4.0: dh3, online ie, in vivo. 
-  - 6.0: pt, r15, RPS, CS
-  - subscale and global score using mean
-  - for easy edeq calculation, I've created redundant columns. They are: edeq_restraint, edeq_ec, edeq_sc, edeq_wc, edeq_global. Corresponding edeq4_restraint and edeq6_restraint are also here if you care.
-- PSWQ: RPS used 10-item version instead of 16. therefore the maximum possible value for this scale on RPS is 50 instead of 96. may make sense to standardize if using total score. R15 doesn't have PSWQ
-- PCLC is *NOT* in DH3 or R15.
-- EPSI not in DH3, online IE, or in vivo 
+  - non clinical (20 item): dh3, online ie, in vivo. rescored items 15 and 17   
+  - clinical (21 item): pt, r15, RPS, CS. item 7 was removed. rescored items 16 and 18   
+  - total score was calculated by summing all items except the suicidality item   
+- EDE-Q:   
+  - 4.0: dh3, online ie, in vivo.    
+  - 6.0: pt, r15, RPS, CS   
+  - subscale and global score using mean   
+  - for easy edeq calculation, I've created redundant columns. They are: edeq_restraint, edeq_ec, edeq_sc, edeq_wc, edeq_global. Corresponding edeq4_restraint and edeq6_restraint are also here if you care.   
+- PSWQ: RPS used 10-item version instead of 16. therefore the maximum possible value for this scale on RPS is 50 instead of 96. may make sense to standardize if using total score. R15 doesn't have PSWQ   
+- PCLC is *NOT* in DH3 or R15.   
+- EPSI not in DH3, online IE, or in vivo    
 
-*measurement similarities*
-FOFM, OCI, SAAS, EPSI, FMPS, EFQ
-Even though studies use different versions of EDE-Q and BDI, they are calculated the same and included and named the same for easy merging
+**measurement similarities**    
+- FOFM, OCI, SAAS, EPSI, FMPS, EFQ   
+- Even though studies use different versions of EDE-Q and BDI, they are calculated the same and included and named the same for easy merging
 
 # libs
 ```{r message=FALSE, warning=FALSE}
@@ -361,7 +361,7 @@ data4 <- data4 %>% rename(employment=employment_status)
 ```
 
 ### education
-```{r}
+```{r results='hide'}
 # data1 school_year (factor), total school years (numeric)
 # data2 education (numeric)
 # data3 Schoolyrs (factor)
@@ -408,7 +408,7 @@ data5$education_level <- dplyr::recode(data5$education_level, "1" = "Less than h
 ```
 
 ### ethnicity
-```{r}
+```{r results='hide'}
 # data1: ethnicity, ethnicity_description, ethnicity_asian
 # data2: ethnicity, ethnicity_desc, API
 # data3: Ethnic, Ethnic1 (which is ethnicity_desc)
@@ -472,7 +472,7 @@ data7$ethnicity <- dplyr::recode(data7$ethnicity, "1" = "AAPI", "3"="Hispanic", 
 
 
 ### gender sex
-```{r}
+```{r results='hide'}
 # gender: data1, data2, data3, data5, data6
 # current_gender: data4
 # gender.x: data7
@@ -525,7 +525,7 @@ data7$sex <- dplyr::recode(data7$sex, "1" = "male", "2" = "female")
 ```
 
 ### sex orient
-```{r}
+```{r results='hide'}
 #sexual_orient : data1, data2, data3, data4, data5, data7
 #sexualorientation: data6
 
@@ -554,7 +554,7 @@ data7$sexual_orient <- dplyr::recode(data7$sexual_orient, "1" = "lesbian or gay"
 ```
 
 ### employment
-```{r}
+```{r results='hide'}
 data1$employment <- dplyr::recode(data1$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
 data2$employment <- dplyr::recode(data2$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
 data3$employment <- dplyr::recode(data3$employment, "1" = "working part-time", "2" = "working full-time", "3"="not working")
@@ -566,7 +566,7 @@ data7$employment <- dplyr::recode(data7$employment, "1" = "working part-time", "
 
 
 ### religion
-```{r}
+```{r results='hide'}
 # data1: religion and religion_description
 # data2, data5, data7: religion and religion_desc
 # data3: Religion and Religion1
@@ -590,7 +590,7 @@ data7$religion <- dplyr::recode(data7$religion, "1" = "Roman Catholicism", "2" =
 
 ### marital status
 
-```{r}
+```{r results='hide'}
 # marital_status: data2, data5, data7
 # marital: data6
 
@@ -603,7 +603,7 @@ data7$marital_status <- dplyr::recode(data7$marital_status, "1" = "single, never
 ```
 
 ### smoking status
-```{r}
+```{r results='hide'}
 # smoking_status: data2, data5
 # smoke: data6 
 # smoker: data7 from smoker to smoking_status
@@ -623,7 +623,7 @@ data7 <- data7 %>% relocate(school_year, .after=smoking_status)
 ```
 
 ### income
-```{r}
+```{r results='hide'}
 # income: data 2, data5, data6, data7
 
 data2$income <- dplyr::recode(data2$income, "1"="less than $20,000", "2"="$20,000-$34,999", "3"="$35,000-$49,999", "4"="$50,000-$74,999", "5"="$75,000-$99,999", "6"="$100,000-$149,999", "7"="$150,000-$199,999", "8"="$200,000 or more")
@@ -662,7 +662,7 @@ data6 <- data6 %>% rename(comorbities=comorbiddx)
 ```
 
 ### clean up some demos
-```{r}
+```{r results='hide'}
 # PastDX1, PastDX2, TripleCheckedDX, describe_sex_orient
 data1 <- data1[-c(which(colnames(data1)=="PastDX1"), which(colnames(data1)=="PastDX2"), which(colnames(data1)=="TripleCheckedDX"), which(colnames(data1)=="describe_sex_orient"))]
 
@@ -683,8 +683,8 @@ data7 <- data7[-which(colnames(data7)=="ageonset1")]
 data2 <- data2 %>% rename(height=ht) %>% rename(weight=wt)
 data5 <- data5 %>% rename(height=ht) %>% rename(weight=wt)
 
-table(data1$height, useNA = "ifany") # looks okay
-str(data1$height)
+# table(data1$height, useNA = "ifany") # looks okay
+# str(data1$height)
 describe(data1$height) # m = 64. someon's 6'2
 # data1 %>% filter(height>70)
 # data1_import %>% filter(participant_id=="DH119")
@@ -696,12 +696,12 @@ data2[which(data2$participant_id=="PT042"), "height"] <- 65.6
 data2[which(data2$participant_id=="PT043"), "height"] <- 62.75
 data2 <- data2[-which(colnames(data2)=="height_original")]
 
-table(data3$height) # looks okay
-str(data3$height)
+# table(data3$height) # looks okay
+# str(data3$height)
 describe(data3$height)
 
-table(data4$height) # looks okay
-str(data4$height)
+# table(data4$height) # looks okay
+# str(data4$height)
 describe(data4$height)
 
 table(data5$height) # looks bad
@@ -713,56 +713,56 @@ data5[which(data5$participant_id=="PR134"), "height"] <- 65.5
 data5[which(data5$participant_id=="PR161"), "height"] <- 62.5
 data5 <- data5[-which(colnames(data5)=="height_original")]
 
-table(data6$height) # looks ok
-str(data6$height)
+# table(data6$height) # looks ok
+# str(data6$height)
 describe(data6$height)
-data6 %>% select(height, currentht) # looks good remove redundant col
+# data6 %>% select(height, currentht) # looks good remove redundant col
 data6 <- data6[-which(colnames(data6)=="currentht")]
 
-table(data7$height) # looks ok
-str(data7$height)
+# table(data7$height) # looks ok
+# str(data7$height)
 data7$height <- as.numeric(data7$height)
 describe(data7$height)
 ```
 
 ### weight
 ```{r}
-table(data1$weight) # looks ok
-str(data1$weight)
+# table(data1$weight) # looks ok
+# str(data1$weight)
 describe(data1$weight) # min 60
-data1 %>% filter(weight<70) # DH116 ht 6'2 AN dx
+# data1 %>% filter(weight<70) # DH116 ht 6'2 AN dx
 
-table(data2$weight) # looks ok
-str(data2$weight)
+# table(data2$weight) # looks ok
+# str(data2$weight)
 describe(data2$weight) # min 86
 
-table(data3$weight) # looks ok
-str(data3$weight)
+# table(data3$weight) # looks ok
+# str(data3$weight)
 describe(data3$weight) # min 73.5
 
-table(data4$weight) # looks ok
-str(data4$weight)
+# table(data4$weight) # looks ok
+# str(data4$weight)
 describe(data4$weight) # min 85
 
-table(data5$weight) # looks ok
-str(data5$weight)
+# table(data5$weight) # looks ok
+# str(data5$weight)
 describe(data5$weight) # min 50
 data5 %>% filter(weight<70) # PR155 AN-R height 55? that's under 5 ft, which isn't unheard of just uncommon
 data5_import %>% filter(participant_id=="PR155") # says 55' yep lowest wt 46
 
-table(data6$weight) # looks ok
-str(data6$weight)
+# table(data6$weight) # looks ok
+# str(data6$weight)
 describe(data6$weight) # min zero
 data6 %>% filter(weight<70) # RPS081 ht 59'' AN dx
 data6_import %>% filter(participant_id=="RPS081") %>% select(weight, demo_currentwt) # said ? for other wt col
 
-table(data7$weight) # looks ok
-str(data7$weight)
+# table(data7$weight) # looks ok
+# str(data7$weight)
 describe(data7$weight) # min 65
-data7 %>% filter(weight < 70) # 5'3 but why given osfed
+# data7 %>% filter(weight < 70) # 5'3 but why given osfed
 ```
 ### diagnosis
-```{r}
+```{r results='hide'}
 # CurrentDx2 for spec and dx for general
 data1 <- data1 %>% rename(dx=CurrentDX1)
 data2 <- data2 %>% rename(CurrentDX2=Confirmed.Dx)
@@ -881,7 +881,7 @@ In this section I examine item-level missingness of measures (i.e., not includin
 # names(data1)
 data1_noscales <- data1[-c(1:18)] 
 dim(data1_noscales) 
-round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100, 2) # 0.61%
+round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100, 2) # 5.61%
 
 ### ind people completely missing ###
 data1_noscales[rowSums(is.na(data1_noscales))==ncol(data1_noscales),] # no one has completely missing data
@@ -902,12 +902,12 @@ data2_noscales[rowSums(is.na(data2_noscales))==ncol(data2_noscales),] # 0
 # names(data3)
 data3_noscales <- data3[-c(1,3:20)] 
 dim(data3_noscales) 
-round(sum(is.na(data3_noscales))/prod(dim(data3_noscales))*100, 2) # 10.60%
+round(sum(is.na(data3_noscales[-1]))/prod(dim(data3_noscales[-1]))*100, 2) # 10.65%
 
 data3_noscales[rowSums(is.na(data3_noscales))==ncol(data3_noscales)-1,] # 11
 allmiss_oie <- data3_noscales[rowSums(is.na(data3_noscales))==ncol(data3_noscales)-1,] %>% select(1) %>% unlist
 
-dat3_nocomplmiss <-data3_noscales[rowSums(is.na(data3_noscales))<ncol(data3_noscales)-1,]
+dat3_nocomplmiss <-data3_noscales[rowSums(is.na(data3_noscales))<ncol(data3_noscales)-1,-1]
 ```
 
 ## dat 4 in vivo
@@ -916,13 +916,13 @@ dat3_nocomplmiss <-data3_noscales[rowSums(is.na(data3_noscales))<ncol(data3_nosc
 
 data4_noscales <- data4[-c(1,3:18)] 
 dim(data4_noscales) 
-round(sum(is.na(data4_noscales))/prod(dim(data4_noscales))*100, 2) # 9.17
+round(sum(is.na(data4_noscales[-1]))/prod(dim(data4_noscales[-1]))*100, 2) # 9.21
 
 data4_noscales[rowSums(is.na(data4_noscales))==ncol(data4_noscales)-1,] 
 allmiss_invivo <- data4_noscales[rowSums(is.na(data4_noscales))==ncol(data4_noscales)-1,] %>% select(1) %>% unlist
 # V026, V028
 
-dat4_nocomplmiss <-data4_noscales[rowSums(is.na(data4_noscales))<ncol(data3_noscales)-1,]
+dat4_nocomplmiss <-data4_noscales[rowSums(is.na(data4_noscales))<ncol(data3_noscales)-1,-1]
 ```
 
 ## dat 5 r15
@@ -962,10 +962,11 @@ data7_noscales[rowSums(is.na(data7_noscales))==ncol(data7_noscales),] # 0
 item-level missingness datasets combined.
 
 ```{r}
-{sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(data3_noscales)), sum(is.na(data4_noscales)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
+totalmissingness <- round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(data3_noscales)), sum(is.na(data4_noscales)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
 {sum(
-(dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(data3_noscales)[1]*dim(data3_noscales)[2]), (dim(data4_noscales)[1]*dim(data4_noscales)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )} 
+(dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(data3_noscales)[1]*dim(data3_noscales)[2]), (dim(data4_noscales)[1]*dim(data4_noscales)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )}*100,2)
 
+totalmissingness
 # 0.04944371, so 4.9% missing
 ```
 
@@ -974,9 +975,10 @@ item-level missingness datasets combined.
 Here, I look at missingness when we remove people who have zero measurs completed.
 
 ```{r}
-round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(dat3_nocomplmiss)), sum(is.na(dat4_nocomplmiss)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
+itemmissingness_allnaremove <- round({sum(sum(is.na(data1_noscales)), sum(is.na(data2_noscales)), sum(is.na(dat3_nocomplmiss)), sum(is.na(dat4_nocomplmiss)), sum(is.na(data5_noscales)), sum(is.na(data6_noscales)), sum(is.na(data7_noscales)))}/ 
 {sum(
 (dim(data1_noscales)[1]*dim(data1_noscales)[2]), (dim(data2_noscales)[1]*dim(data2_noscales)[2]), (dim(dat3_nocomplmiss)[1]*dim(dat3_nocomplmiss)[2]), (dim(dat4_nocomplmiss)[1]*dim(dat4_nocomplmiss)[2]), (dim(data5_noscales)[1]*dim(data5_noscales)[2]), (dim(data6_noscales)[1]*dim(data6_noscales)[2]), (dim(data7_noscales)[1]*dim(data7_noscales)[2]) )} *100, 2)
+itemmissingness_allnaremove
 # 2.61% missing
 ```
 
@@ -1548,8 +1550,8 @@ describe(dat$pclc_global)
 ```
 
 # dx again
-```{r}
-old <- read_csv("~/Dropbox/Research/Coauthor/anaan_ml/cleaning and combining datasets/ANAANcombined_cec_2023-06-29.csv")
+```{r results='hide'}
+old <- read_csv("archived/ANAANcombined_cec_2023-06-29.csv")
 
 #### invivo ###
 dat4subset <- dat %>% filter(study=="invivo")
@@ -1603,6 +1605,12 @@ oldsub<-oldsub %>% rename(study=study_old, participant_id=participant_id_old)
 
 left_join(dat[which(dat$study=="RPS"),c(which(colnames(dat)=="participant_id"), which(colnames(dat)=="dx"), which(colnames(dat)=="dx_old"), which(colnames(dat)=="CurrentDX2"), which(colnames(dat)=="CurrentDX2_old"))], oldsub) %>% select(study, participant_id, dx_old, dx, CurrentDX2, CurrentDX2_old)
 
+# dat %>% filter(dx=="AN" & bmi>30) %>% select(participant_id, dx, height, weight) 
+# dat %>% filter(study=="RPS") %>% select(participant_id, height, weight, dx, CurrentDX2)
+
+# data6 %>% filter(participant_id=="RPS114")
+dat[which(dat$participant_id=="RPS114"), "dx"] <- "AAN"
+
 #### cs ####
 oldsub <- old[which(dat$study =="CS"),]
 colnames(oldsub) <- paste(colnames(oldsub),"old",sep="_")
@@ -1631,15 +1639,13 @@ left_join(dat[which(dat$study=="IE"),c(which(colnames(dat)=="participant_id"), w
 
 ## diagnosis
 
-Here I examine how many participants were diagnosed with AN and atypical AN. 215 participants had AAN (48.1%) and 232 participants had AN (51.9%). Specifiers are in the comments.
-
 ```{r results='hold'}
-table1(~dx+ CurrentDX2, data=dat,
-    overall=c(left="Total"), caption="Diagnoses")
-dat %>% filter(dx=="AN-BP") %>% select(participant_id, dx, CurrentDX2)
+# table1(~dx+ CurrentDX2, data=dat,
+#     overall=c(left="Total"), caption="Diagnoses")
+# dat %>% filter(dx=="AN-BP") %>% select(participant_id, dx, CurrentDX2)
 dat$dx <- ifelse(dat$dx=="AN-BP", "AN", dat$dx)
 
-dat %>% filter(dx=="OSFED") %>% select(study) %>% unique
+# dat %>% filter(dx=="OSFED") %>% select(study) %>% unique
 dat$dx <- dplyr::recode(dat$dx, "OSFED"="AAN")
 
 # chisq.test(dat$study, dat$dx, correct=TRUE) # p = 0.15
@@ -1656,11 +1662,11 @@ rcompanion::cramerV(df, ci=TRUE)
 ```
 
 
-# age, race
+# age, race, gender
 
 Calculate more participant characteristics. Participants were around 30 years old, mostly white cis women.
 
-```{r}
+```{r results='hide'}
 describe(dat$age) # m = 30.33 (SD = 10.20, Range = 16-66)
 dat %>% filter(age<18) # 3 onlineIE participants were under 18 (IE061, IE079, IE167)
 
@@ -1675,6 +1681,11 @@ racetab <- cbind(racetab, as.data.frame(round(prop.table(table(dat$ethnicity, us
 names(racetab)[c(1,3)] <- c("race", "perc")
 
 racetab
+
+gendertab <- as.data.frame(table(dat$gender, useNA = "ifany"))
+names(gendertab)[2] <- "count"
+gendertab <- cbind(gendertab, as.data.frame(round(prop.table(table(dat$gender, useNA = "ifany"))*100,2))[2])
+names(gendertab)[c(1,3)] <- c("gender", "perc")
 ```
 
 # tidy cols
@@ -1710,6 +1721,45 @@ dat$bmi <- dat$weight/(dat$height^2)*703
 # dat %>% filter(bmi==0) %>% select(participant_id, height, weight, bmi)
 dat$bmi <- ifelse(dat$bmi==0, NA, dat$bmi)
 describe(dat$bmi)
+
+dat %>% filter(dx=="AN", bmi>30) # this should be AAN
+dat[which(dat$participant_id=="PR113"), "dx"] <- "AAN"
+dat[which(dat$participant_id=="PR113"), "CurrentDX2"] <- "AANBP"
+
+describe(dat[which(dat$dx=="AAN"), "bmi"]) # min 17.47 not good
+dat %>% filter(dx=="AAN" & bmi < 18.5)
+# DH016, IE004, PR128
+dat %>% filter(dx=="AAN" & bmi < 18.5) %>% select(participant_id, height, weight, bmi, dx, CurrentDX2) 
+
+data1 %>% filter(participant_id=="DH016") # should be AN, and ANBP
+data3 %>% filter(participant_id=="IE004") # should be AN, and ANR
+data5 %>% filter(participant_id=="PR128")  # should be AN and ANR
+
+dat[which(dat$participant_id=="DH016"), "dx"] <- "AN"
+dat[which(dat$participant_id=="DH016"), "CurrentDX2"] <- "ANBP"
+
+dat[which(dat$participant_id=="IE004"), "dx"] <- "AN"
+dat[which(dat$participant_id=="IE004"), "CurrentDX2"] <- "ANR"
+
+dat[which(dat$participant_id=="PR128"), "dx"] <- "AN"
+dat[which(dat$participant_id=="PR128"), "CurrentDX2"] <- "ANR"
+
+dat %>% filter(dx=="AN" & bmi > 18.5) %>% select(bmi)
+
+dat %>% filter(dx=="AN" & bmi > 18.5)
+describe(dat[which(dat$dx=="AN"), "bmi"])
+dat %>% filter(dx=="AN" & bmi > 18.5) # 84 rows
+# may be AN is partial partial remission
+
+dxtab <- as.data.frame(table(dat$dx, useNA = "ifany"))
+names(dxtab)[2] <- "count"
+dxtab <- cbind(dxtab, as.data.frame(round(prop.table(table(dat$dx, useNA = "ifany"))*100,2))[2])
+names(dxtab)[c(1,3)] <- c("dx", "perc")
+
+currentdxtab <- as.data.frame(table(dat$CurrentDX2, useNA = "ifany"))
+names(currentdxtab)[2] <- "count"
+currentdxtab <- cbind(currentdxtab, as.data.frame(round(prop.table(table(dat$CurrentDX2, useNA = "ifany"))*100,2))[2])
+names(currentdxtab)[c(1,3)] <- c("dx", "perc")
 ```
 
 # move columns around
@@ -1717,7 +1767,7 @@ describe(dat$bmi)
 Here I put columns in an order I like, so total and subscale scores immediately after the measure.
 
 ```{r results='hide'}
-names(dat)
+# names(dat)
 
 dat <- dat %>%sjmisc::move_columns("edeq4_restraint", "edeq4_ec", "edeq4_sc", "edeq4_wc", "edeq4_global", .after = ede_q_42) 
 
@@ -1756,39 +1806,11 @@ dat <- dat %>% sjmisc::move_columns("dx", "CurrentDX2", "comorbidities", .after 
 dat <- dat %>% relocate(bmi, .after = weight)
 ```
 
-```{r}
-describe(dat[which(dat$dx=="AAN"), "bmi"]) # min 17.47 not good
-dat %>% filter(dx=="AAN" & bmi < 18.5)
-# DH016, IE004, PR128
-dat %>% filter(dx=="AAN" & bmi < 18.5) %>% select(participant_id, height, weight, bmi, dx, CurrentDX2) 
-
-data1 %>% filter(participant_id=="DH016") # should be AN, and ANBP
-data3 %>% filter(participant_id=="IE004") # should be AN, and ANR
-data5 %>% filter(participant_id=="PR128")  # should be AN and ANR
-
-dat[which(dat$participant_id=="DH016"), "dx"] <- "AN"
-dat[which(dat$participant_id=="DH016"), "CurrentDX2"] <- "ANBP"
-
-dat[which(dat$participant_id=="IE004"), "dx"] <- "AN"
-dat[which(dat$participant_id=="IE004"), "CurrentDX2"] <- "ANR"
-
-dat[which(dat$participant_id=="PR128"), "dx"] <- "AN"
-dat[which(dat$participant_id=="PR128"), "CurrentDX2"] <- "ANR"
-
-dat %>% filter(dx=="AN" & bmi > 18.5) %>% select(bmi)
-
-dat %>% filter(dx=="AN" & bmi > 18.5)
-describe(dat[which(dat$dx=="AN"), "bmi"])
-dat %>% filter(dx=="AN" & bmi > 18.5) # 84 rows
-# may be AN is partial partial remission
-```
-
 
 # visualize missingness
 ```{r warning=FALSE}
 gg_miss_upset(dat)
-gg_miss_var(dat[grepl("\\D$", colnames(dat))],
-            facet = study)
+gg_miss_var(dat[grepl("\\D$", colnames(dat))], facet = study)
 # gg_miss_case(dat)
 ```
 
@@ -1803,4 +1825,36 @@ filename= paste(name, Sys.Date(), filetype, sep='')
 
 write.csv(dat,file=filename, row.names = FALSE)
 ```
+
+# Summary
+**Item level missingness by dataset:**    
+DH3 had `r paste0(round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100, 2), "%")` missing. PT Open Series had `r paste0(round(sum(is.na(data2_noscales))/prod(dim(data2_noscales))*100, 2), "%")` missing. Online IE had `r paste0(round(sum(is.na(data3_noscales[-1]))/prod(dim(data3_noscales[-1]))*100, 2), "%")` missing. In vivo had `r paste0(round(sum(is.na(data4_noscales[-1]))/prod(dim(data4_noscales[-1]))*100, 2), "%")` missing. PR had `r paste0(round(sum(is.na(data5_noscales))/prod(dim(data5_noscales))*100, 2), "%")` missing. RPS had `r paste0(round(sum(is.na(data6_noscales))/prod(dim(data6_noscales))*100, 2), "%")` missing. CS had `r paste0(round(sum(is.na(data7_noscales))/prod(dim(data7_noscales))*100, 2), "%")` missing.     
+
+**Item level missingness combined:**   
+Combined, there was a total of `r paste0(totalmissingness, "%")`. Thirteen participants did not complete any of the measures. After removing these participants, item level missingness was `r paste0(itemmissingness_allnaremove, "%")`.   
+
+**Participant demographics**   
+Participants were mostly cisgender women (`r paste0("N=", gendertab[which(gendertab$gender=="cis woman"), "count"], ", ", gendertab[which(gendertab$gender=="cis woman"), "perc"], "%")`),  white (`r paste0("N=", racetab[which(racetab$race=="White, not of Hispanic origin (includes Caucasian, European American)"), "count"], ", ", racetab[which(racetab$race=="White, not of Hispanic origin (includes Caucasian, European American)"), "perc"], "%")`), with a mean age of `r paste0(round(describe(dat$age)$mean,2), " (SD=", round(describe(dat$age)$sd, 2), ", Range=", describe(dat$age)$min, "-", describe(dat$age)$max, ")")`. The sample was about evenly split between participants with diagnoses of AN (`r paste0("N=", dxtab[which(dxtab$dx=="AN"), "count"], ", ", dxtab[which(dxtab$dx=="AN"), "perc"], "%")`) and AAN (`r paste0("N=", dxtab[which(dxtab$dx=="AAN"), "count"], ", ", dxtab[which(dxtab$dx=="AAN"), "perc"], "%")`). The specific diagnoses were as follows: AAN-R (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="AANR"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="AANR"), "perc"], "%")`), AN-R (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="ANR"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="ANR"), "perc"], "%")`), AN-BP (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="ANBP"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="ANBP"), "perc"], "%")`), and AAN-BP (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="AANBP"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="AANBP"), "perc"], "%")`.    
+
+**other demo info**   
+- Some studies collected education level by asking participants to report number of years in school, whereas other studies collected education by asking highest degree attained. More specifics in the table below. `r dim(dat)[1]-(sum(table(dat$education_level))+describe(dat[which(dat$study!="DH3"), "school_year"])$n )` chose to opt out of this question.    
+- Participants with AN had a mean BMI of 17.81 (SD = 2.70, Range = 9.50-27.46).   
+- Participants with AAN had a mean BMI of 24.60 (SD = 6.28, Range = 18.56-46.98).
+
+```{r}
+table1(~dx+ CurrentDX2 +gender+ethnicity+employment, data=dat,
+    overall=c(left="Total"), caption="Demos")
+
+describe(dat$age)
+
+table(dat$education_level)
+describe(dat[which(dat$study!="DH3"), "school_year"])
+
+dim(dat)[1]-(sum(table(dat$education_level))+describe(dat[which(dat$study!="DH3"), "school_year"])$n ) # 32 missing
+
+describe(dat[which(dat$dx=="AN"), "bmi"])
+# paste0(round(describe(dat[which(dat$dx=="AN"), "bmi"])$mean,2), ", (SD=", round(describe(dat[which(dat$dx=="AN"), "bmi"])$sd,2), ", Range=", round(describe(dat[which(dat$dx=="AN"), "bmi"])$min,2), "-", round(describe(dat[which(dat$dx=="AN"), "bmi"])$max,2), ")")
+describe(dat[which(dat$dx=="AAN"), "bmi"])
+```
+
 
