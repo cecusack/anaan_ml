@@ -493,13 +493,13 @@ data3$gender <- dplyr::recode(data3$gender, "0" = "cis man", "1" = "cis woman", 
 data4$gender <- dplyr::recode(data4$gender, "1" = "cis woman", "2" = "cis man")
 
 # table(data5$gender, useNA = "ifany")
-data5$gender <- dplyr::recode(data5$gender, "1" = "cisgender woman", "2" = "cisgender man", "3"="trans woman", "5"="nonbinary", "6"="not listed")
+data5$gender <- dplyr::recode(data5$gender, "1" = "cis woman", "2" = "cis man", "3"="trans woman", "5"="nonbinary", "6"="Not listed")
 
 # table(data6$gender, useNA = "ifany")
-data6$gender <- dplyr::recode(data6$gender, "1" = "cisgender woman", "2" = "cisgender man", "3"="trans woman", "4"="trans man", "5"="nonbinary", "6"="not listed")
+data6$gender <- dplyr::recode(data6$gender, "1" = "cis woman", "2" = "cis man", "3"="trans woman", "4"="trans man", "5"="nonbinary", "6"="Not listed")
 
 # table(data7$gender, useNA = "ifany")
-data7$gender <- dplyr::recode(data7$gender, "1" = "cisgender woman", "2" = "cisgender man", "5"="nonbinary")
+data7$gender <- dplyr::recode(data7$gender, "1" = "cis woman", "2" = "cis man", "5"="nonbinary")
 # sex: data1, data2, data4, data6, data7
 # Sex: data3
 # sex_assigned: data5
@@ -1647,18 +1647,6 @@ dat$dx <- ifelse(dat$dx=="AN-BP", "AN", dat$dx)
 
 # dat %>% filter(dx=="OSFED") %>% select(study) %>% unique
 dat$dx <- dplyr::recode(dat$dx, "OSFED"="AAN")
-
-# chisq.test(dat$study, dat$dx, correct=TRUE) # p = 0.15
-df <- as.data.frame(matrix(nrow = 7,  ncol = 2))
-df[1] <- as.matrix(table(dat$study, dat$dx))[,1]
-df[2] <- as.matrix(table(dat$study, dat$dx))[,2]
-names(df) <- c("AAN", "AN")
-rownames(df) <- unique(unlist(as.data.frame(table(dat$study, dat$dx))[1]))
-df <- as.matrix(df)
-chisq.test(df, correct=TRUE) # women v other
-# X-squared = 17.914, df = 6, p-value = 0.006451
-rcompanion::cramerV(df, ci=TRUE) 
-# cramer's v = 0.2, lower ci = 0.1374, upper.ci = 0.3041
 ```
 
 
@@ -1762,6 +1750,24 @@ currentdxtab <- cbind(currentdxtab, as.data.frame(round(prop.table(table(dat$Cur
 names(currentdxtab)[c(1,3)] <- c("dx", "perc")
 ```
 
+
+## chi sq dx by study
+```{r}
+table(dat$study, dat$dx)
+# chisq.test(dat$study, dat$dx, correct=TRUE) # p = 0.15
+df <- as.data.frame(matrix(nrow = 7,  ncol = 2))
+df[1] <- as.matrix(table(dat$study, dat$dx))[,1]
+df[2] <- as.matrix(table(dat$study, dat$dx))[,2]
+names(df) <- c("AAN", "AN")
+rownames(df) <- unique(unlist(as.data.frame(table(dat$study, dat$dx))[1]))
+df <- as.matrix(df)
+chisq.test(df, correct=TRUE) # women v other
+# X-squared = 17.914, df = 6, p-value = 0.006451
+rcompanion::cramerV(df, ci=TRUE) 
+# cramer's v = 0.2, lower ci = 0.1374, upper.ci = 0.3041
+```
+
+
 # move columns around
 
 Here I put columns in an order I like, so total and subscale scores immediately after the measure.
@@ -1834,7 +1840,7 @@ DH3 had `r paste0(round(sum(is.na(data1_noscales))/prod(dim(data1_noscales))*100
 Combined, there was a total of `r paste0(totalmissingness, "%")`. Thirteen participants did not complete any of the measures. After removing these participants, item level missingness was `r paste0(itemmissingness_allnaremove, "%")`.   
 
 **Participant demographics**   
-Participants were mostly cisgender women (`r paste0("N=", gendertab[which(gendertab$gender=="cis woman"), "count"], ", ", gendertab[which(gendertab$gender=="cis woman"), "perc"], "%")`),  white (`r paste0("N=", racetab[which(racetab$race=="White, not of Hispanic origin (includes Caucasian, European American)"), "count"], ", ", racetab[which(racetab$race=="White, not of Hispanic origin (includes Caucasian, European American)"), "perc"], "%")`), with a mean age of `r paste0(round(describe(dat$age)$mean,2), " (SD=", round(describe(dat$age)$sd, 2), ", Range=", describe(dat$age)$min, "-", describe(dat$age)$max, ")")`. The sample was about evenly split between participants with diagnoses of AN (`r paste0("N=", dxtab[which(dxtab$dx=="AN"), "count"], ", ", dxtab[which(dxtab$dx=="AN"), "perc"], "%")`) and AAN (`r paste0("N=", dxtab[which(dxtab$dx=="AAN"), "count"], ", ", dxtab[which(dxtab$dx=="AAN"), "perc"], "%")`). The specific diagnoses were as follows: AAN-R (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="AANR"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="AANR"), "perc"], "%")`), AN-R (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="ANR"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="ANR"), "perc"], "%")`), AN-BP (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="ANBP"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="ANBP"), "perc"], "%")`), and AAN-BP (`r paste0("N=", currentdxtab[which(currentdxtab$dx=="AANBP"), "count"], ", ", currentdxtab[which(currentdxtab$dx=="AANBP"), "perc"], "%")`.    
+Participants were mostly cisgender women (`r paste0("N=", gendertab[which(gendertab$gender=="cis woman"), "count"], ", ", gendertab[which(gendertab$gender=="cis woman"), "perc"], "%")`),  white (`r paste0("N=", racetab[which(racetab$race=="White, not of Hispanic origin (includes Caucasian, European American)"), "count"], ", ", racetab[which(racetab$race=="White, not of Hispanic origin (includes Caucasian, European American)"), "perc"], "%")`), with a mean age of `r paste0(round(describe(dat$age)$mean,2), " (SD=", round(describe(dat$age)$sd, 2), ", Range=", describe(dat$age)$min, "-", describe(dat$age)$max, ")")`. The sample was about evenly split between participants with diagnoses of AN (`r paste0("N=", dxtab[which(dxtab$dx=="AN"), "count"], ", ", dxtab[which(dxtab$dx=="AN"), "perc"], "%")`) and AAN (`r paste0("N=", dxtab[which(dxtab$dx=="AAN"), "count"], ", ", dxtab[which(dxtab$dx=="AAN"), "perc"], "%")`). The specific diagnoses in the table.    
 
 **other demo info**   
 - Some studies collected education level by asking participants to report number of years in school, whereas other studies collected education by asking highest degree attained. More specifics in the table below. `r dim(dat)[1]-(sum(table(dat$education_level))+describe(dat[which(dat$study!="DH3"), "school_year"])$n )` chose to opt out of this question.    
