@@ -205,7 +205,7 @@ the datasets that contain 30 item efq were input in redcap with different number
 #### dh3 31 items ####
 # names(data1[grepl("^efq", colnames(data1))])
 
-# 2=1, 5=2, 7= 3, 10=4, 11=5, 12=6, 13=7, 14=8, 4= 9, 17=10, 15=11, 9=12,
+# 2=1, 5=2, 7= 3, 10=4, 11=5, 12=6, 13=7, 14=8, 6= 9, 17=10, 15=11, 9=12,
 # 19= 13, 25=14, 26=15, 29=16, 30=17, 20=18, 21=19, 23=20 
 data1$efq_1new <- data1$efq_2
 data1$efq_2new <- data1$efq_5
@@ -215,7 +215,7 @@ data1$efq_5new <- data1$efq_11
 data1$efq_6new <- data1$efq_12
 data1$efq_7new <- data1$efq_13
 data1$efq_8new <- data1$efq_14
-data1$efq_9new <- data1$efq_4
+data1$efq_9new <- data1$efq_6
 data1$efq_10new <- data1$efq_17
 data1$efq_11new <- data1$efq_15
 data1$efq_12new <- data1$efq_9
@@ -240,7 +240,7 @@ data3$efq_5new <- data3$efq_11
 data3$efq_6new <- data3$efq_12
 data3$efq_7new <- data3$efq_13
 data3$efq_8new <- data3$efq_14
-data3$efq_9new <- data3$efq_4
+data3$efq_9new <- data3$efq_6
 data3$efq_10new <- data3$efq_17
 data3$efq_11new <- data3$efq_15
 data3$efq_12new <- data3$efq_9
@@ -266,7 +266,7 @@ data4$efq_5new <- data4$efq_11
 data4$efq_6new <- data4$efq_12
 data4$efq_7new <- data4$efq_13
 data4$efq_8new <- data4$efq_14
-data4$efq_9new <- data4$efq_4
+data4$efq_9new <- data4$efq_6
 data4$efq_10new <- data4$efq_17
 data4$efq_11new <- data4$efq_15
 data4$efq_12new <- data4$efq_9
@@ -299,13 +299,13 @@ colnames(data4)[grepl('^efq',colnames(data4))] <- sub("(efq_\\d{1,2})(new)", "\\
 # names(data3[grepl("bdi", colnames(data3))]) 
 # names(data4[grepl("^bdi", colnames(data4))])
 # names(data5[grepl("^bdi", colnames(data5))]) # remove item 7
-# names(data6[grepl("^bdi", colnames(data6))]) # remove item 7, remove _clinical
-# names(data7[grepl("^bdi", colnames(data7))]) # remove item 7
+# names(data6[grepl("^bdi", colnames(data6))]) # remove item 9, remove _clinical
+# names(data7[grepl("^bdi", colnames(data7))]) # remove item 9
 
 data2 <- data2[-which(colnames(data2)=="bdi_7")]
 data5 <- data5[-which(colnames(data5)=="bdi_7")]
-data6 <- data6[-which(colnames(data6)=="bdi_7_clinical")]
-data7 <- data7[-which(colnames(data7)=="bdi_7")]
+data6 <- data6[-which(colnames(data6)=="bdi_9_clinical")]
+data7 <- data7[-which(colnames(data7)=="bdi_9")]
 
 colnames(data6)[grepl('^bdi',colnames(data6))] <- gsub("(bdi_\\d{1,2})(.*)", "\\1",colnames(data6[grepl("^bdi", colnames(data6))]))
 ```
@@ -1182,6 +1182,7 @@ dim(dat) # 448 337
 
 # another check
 table(dat$CurrentDX2) # data4 doesn't have specifiers for AAN
+
 ```
 
 # scoring
@@ -1551,7 +1552,7 @@ describe(dat$pclc_global)
 
 # dx again
 ```{r results='hide'}
-old <- read_csv("archived/ANAANcombined_cec_2023-06-29.csv")
+old <- read_csv("ANAANcombined_cec_2023-06-29.csv")
 
 #### invivo ###
 dat4subset <- dat %>% filter(study=="invivo")
