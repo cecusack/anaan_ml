@@ -205,8 +205,7 @@ the datasets that contain 30 item efq were input in redcap with different number
 #### dh3 31 items ####
 # names(data1[grepl("^efq", colnames(data1))])
 
-# 2=1, 5=2, 7= 3, 10=4, 11=5, 12=6, 13=7, 14=8, 6= 9, 17=10, 15=11, 9=12,
-# 19= 13, 25=14, 26=15, 29=16, 30=17, 20=18, 21=19, 23=20 
+# 2=1, 5=2, 7= 3, 10=4, 11=5, 12=6, 13=7, 14=8, 6= 9, 17=10, 15=11,  25=12, 26=13, 29=14, 30=15, 20=16, 19=17, 21=18, 9=19, 23=20
 data1$efq_1new <- data1$efq_2
 data1$efq_2new <- data1$efq_5
 data1$efq_3new <- data1$efq_7
@@ -218,14 +217,14 @@ data1$efq_8new <- data1$efq_14
 data1$efq_9new <- data1$efq_6
 data1$efq_10new <- data1$efq_17
 data1$efq_11new <- data1$efq_15
-data1$efq_12new <- data1$efq_9
-data1$efq_13new <- data1$efq_19
-data1$efq_14new <- data1$efq_25
-data1$efq_15new <- data1$efq_26
-data1$efq_16new <- data1$efq_29
-data1$efq_17new <- data1$efq_30
-data1$efq_18new <- data1$efq_20
-data1$efq_19new <- data1$efq_19
+data1$efq_12new <- data1$efq_25
+data1$efq_13new <- data1$efq_26
+data1$efq_14new <- data1$efq_29
+data1$efq_15new <- data1$efq_30
+data1$efq_16new <- data1$efq_20
+data1$efq_17new <- data1$efq_19
+data1$efq_18new <- data1$efq_21
+data1$efq_19new <- data1$efq_9
 data1$efq_20new <- data1$efq_23
 
 data1 <- data1[!grepl("^efq_\\d{1,2}$", colnames(data1))] # remove items that follow the pattern efq_[:digit:]
@@ -243,14 +242,14 @@ data3$efq_8new <- data3$efq_14
 data3$efq_9new <- data3$efq_6
 data3$efq_10new <- data3$efq_17
 data3$efq_11new <- data3$efq_15
-data3$efq_12new <- data3$efq_9
-data3$efq_13new <- data3$efq_19
-data3$efq_14new <- data3$efq_25
-data3$efq_15new <- data3$efq_26
-data3$efq_16new <- data3$efq_29
-data3$efq_17new <- data3$efq_30
-data3$efq_18new <- data3$efq_20
-data3$efq_19new <- data3$efq_19
+data3$efq_12new <- data3$efq_25
+data3$efq_13new <- data3$efq_26
+data3$efq_14new <- data3$efq_29
+data3$efq_15new <- data3$efq_30
+data3$efq_16new <- data3$efq_20
+data3$efq_17new <- data3$efq_19
+data3$efq_18new <- data3$efq_21
+data3$efq_19new <- data3$efq_9
 data3$efq_20new <- data3$efq_23
 
 data3 <- data3[!grepl("^efq_\\d{1,2}$", colnames(data3))] # remove items that follow the pattern efq_[:digit:]
@@ -269,14 +268,14 @@ data4$efq_8new <- data4$efq_14
 data4$efq_9new <- data4$efq_6
 data4$efq_10new <- data4$efq_17
 data4$efq_11new <- data4$efq_15
-data4$efq_12new <- data4$efq_9
-data4$efq_13new <- data4$efq_19
-data4$efq_14new <- data4$efq_25
-data4$efq_15new <- data4$efq_26
-data4$efq_16new <- data4$efq_29
-data4$efq_17new <- data4$efq_30
-data4$efq_18new <- data4$efq_20
-data4$efq_19new <- data4$efq_19
+data4$efq_12new <- data4$efq_25
+data4$efq_13new <- data4$efq_26
+data4$efq_14new <- data4$efq_29
+data4$efq_15new <- data4$efq_30
+data4$efq_16new <- data4$efq_20
+data4$efq_17new <- data4$efq_19
+data4$efq_18new <- data4$efq_21
+data4$efq_19new <- data4$efq_9
 data4$efq_20new <- data4$efq_23
 
 data4 <- data4[!grepl("^efq_\\d{1,2}$", colnames(data4))] # remove items that follow the pattern efq_[:digit:]
