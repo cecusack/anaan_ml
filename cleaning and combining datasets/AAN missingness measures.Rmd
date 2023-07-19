@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 **measurement differences**   
 - BDI: 
   - non clinical (20 item): dh3, online ie, in vivo. rescored items 15 and 17   
-  - clinical (21 item): pt, r15, RPS, CS. item 7 was removed. rescored items 16 and 18   
+  - clinical (21 item): pt, r15, RPS, CS. item 7 was removed from PT and R15 and item 9 was removed from RPS and CS (suicidal ideation). rescored items 16 and 18   
   - total score was calculated by summing all items except the suicidality item   
 - EDE-Q:   
   - 4.0: dh3, online ie, in vivo.    
@@ -55,49 +55,49 @@ In this code chunk, I load the RData Yuchen sent me with raw dat from the 7 stud
 ```{r results='hide'}
 # Cardbox > R15 Sensor Preprocessing and Analysis > RAW ALL datasets deidentified
 # data 1 = DH3
-data1_import <- read.csv("dh3_merged.csv")
+data1_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/dh3_merged.csv")
 data1 <- data1_import
 data1 <- data1[-which(colnames(data1)=="X")]
 data1$study <- "DH3"
 data1 <- data1 %>% relocate(study)
 dim(data1) # 147 x 377
 # data 2 = PT
-data2_import <- read.csv("PT_CLEANED_data.csv")
+data2_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/PT_CLEANED_data.csv")
 data2 <- data2_import
 data2 <- data2[-which(colnames(data2)=="X")]
 data2$study <- "PT"
 data2 <- data2 %>% relocate(study)
 dim(data2) # 75 x 1891
 # data 3 = online IE
-data3_import <- read.csv("OIE2.csv")
+data3_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/OIE2.csv")
 data3 <- data3_import
 data3 <- data3[-which(colnames(data3)=="X")]
 data3$study <- "IE"
 data3 <- data3 %>% relocate(study)
 dim(data3) # 229 x 943
 # data 4 = V
-data4_import <- read.csv("IIE2.csv")
+data4_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/IIE2.csv")
 data4 <- data4_import
 data4 <- data4[-which(colnames(data4)=="X")]
 data4$study <- "invivo"
 data4 <- data4 %>% relocate(study)
 dim(data4) # 37 x 1137
 # data 5 = R15 PR
-data5_import <- read.csv("R15CLEANED_data.csv")
+data5_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/R15CLEANED_data.csv")
 data5 <- data5_import
 data5 <- data5[-which(colnames(data5)=="X")]
 data5$study <- "PR"
 data5 <- data5 %>% relocate(study)
 dim(data5) # 99 x 689
 # data 6 = R34 RPS
-data6_import <- read.csv("R34CLEANED_data.csv")
+data6_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/R34CLEANED_data.csv")
 data6 <- data6_import
 data6 <- data6[-which(colnames(data6)=="X")]
 data6$study <- "RPS"
 data6 <- data6 %>% relocate(study)
 dim(data6) # 99 x 2053
 # data 7 = CS
-data7_import <- read.csv("CS_CLEANED_data.csv")
+data7_import <- read.csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml raw dat/CS_CLEANED_data.csv")
 data7 <- data7_import
 data7 <- data7[-which(colnames(data7)=="X")]
 data7$study <- "CS"
@@ -1551,7 +1551,7 @@ describe(dat$pclc_global)
 
 # dx again
 ```{r results='hide'}
-old <- read_csv("ANAANcombined_cec_2023-06-29.csv")
+old <- read_csv("/Users/clairecusack/Dropbox/Research/Coauthor/anaan_ml/cleaning and combining datasets/archived/ANAANcombined_cec_2023-06-29.csv")
 
 #### invivo ###
 dat4subset <- dat %>% filter(study=="invivo")
@@ -1865,7 +1865,7 @@ describe(dat[which(dat$dx=="AAN"), "bmi"])
 
 # cronbach's alpha
 ```{r}
-dat <- read.csv("ANAANcombined_cec_2023-07-03.csv")
+dat <- read.csv("ANAANcombined_cec_2023-07-19.csv")
 ```
 
 ## ede q 4 and 6
