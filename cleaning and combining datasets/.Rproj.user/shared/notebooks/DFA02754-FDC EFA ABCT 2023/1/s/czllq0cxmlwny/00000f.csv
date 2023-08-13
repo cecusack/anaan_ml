@@ -1,0 +1,18 @@
+"0","fa.none2 = fa(r=x, "
+"0","             nfactors=2, "
+"0","             rotate = ""promax"" , "
+"0","             SMC = TRUE, "
+"0","             fm=""pa"", "
+"0","             max.iter=100)"
+"0","fa.none2"
+"1","Factor Analysis using method = "
+"1"," "
+"1","pa"
+"1","
+Call: "
+"1","fa(r = x, nfactors = 2, rotate = ""promax"", SMC = TRUE, max.iter = 100, 
+"
+"1","    fm = ""pa"")
+"
+"1","Standardized loadings (pattern matrix) based upon correlation matrix
+"

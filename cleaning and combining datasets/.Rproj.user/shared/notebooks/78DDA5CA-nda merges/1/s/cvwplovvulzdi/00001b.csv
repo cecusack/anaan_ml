@@ -1,0 +1,3 @@
+"0","twoEMA = rbind(finalOrgMorningSurvey, finalOrgAfternoonSurvey)"
+"0","finalEMA = rbind(twoEMA, finalOrgEveningSurvey)"
+"0","finalEMA"

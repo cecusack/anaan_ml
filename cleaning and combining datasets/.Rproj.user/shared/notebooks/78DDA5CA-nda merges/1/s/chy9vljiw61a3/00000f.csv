@@ -1,0 +1,5 @@
+"0","#renaming columns to make unifying easier"
+"0","colnames(ethicaIDs)[2] = ""Name"""
+"0","colnames(ethicaIDs)[1] = ""src_subject_id"""
+"0","ethicaIDs$Name = as.character(ethicaIDs$Name)"
+"0","ethicaIDs"

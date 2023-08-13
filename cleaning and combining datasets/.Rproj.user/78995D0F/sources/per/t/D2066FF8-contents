@@ -1,0 +1,473 @@
+---
+title: "NIH NDA EMA Data Cleaning"
+author: "Luis Sandoval-Araujo"
+date: "2023-05-15"
+output: html_document
+---
+```{r}
+library(tidyverse)
+```
+
+```{r}
+#pulling in data and IDs
+#raw EMA pulled directly from Ethica - we don't need everything previously where we tried to merge things
+#GUIDs generated from the NIH NDA tool and then reformatted to include participant IDs
+
+morningSurvey = read.csv("C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/responses/survey_responses_6758.csv", check.names = FALSE)
+#check.names seems to be how we prevent the prefixes from showing up in the output dataframe, prevents the issue we had above 
+guids = read.csv("C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/GUID RESULTS.csv")
+ethicaIDs = read.csv("C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/Data/Ethica IDs.csv")
+```
+
+```{r}
+morningSurvey
+guids
+ethicaIDs
+```
+
+```{r}
+#renaming columns to make unifying easier
+colnames(ethicaIDs)[2] = "Name"
+colnames(ethicaIDs)[1] = "src_subject_id"
+ethicaIDs$Name = as.character(ethicaIDs$Name)
+ethicaIDs
+morningSurvey$Name = as.character(morningSurvey$Name)
+morningSurvey
+```
+```{r}
+#Creating a dataframe for GUIDS - honestly we can do this later as well but I don't want to break the code from when I was playing it by ear
+fullIDs = left_join(ethicaIDs, guids, by="src_subject_id")
+fullIDs
+```
+
+```{r}
+#Adding GUIDs to our dataset
+fullMorningSurvey = left_join(fullIDs, morningSurvey, by="Name")
+fullMorningSurvey
+```
+
+```{r}
+#Reading in afternoon surveys and changing object types
+afternoonSurvey = read.csv("C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/responses/survey_responses_6963.csv", check.names = FALSE)
+afternoonSurvey$Name = as.character(afternoonSurvey$Name)
+fullafternoonSurvey = left_join(fullIDs, afternoonSurvey, by="Name")
+fullafternoonSurvey
+```
+
+```{r}
+eveningSurvey = read.csv("C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/responses/survey_responses_6964.csv", check.names = FALSE)
+eveningSurvey$Name = as.character(eveningSurvey$Name)
+fulleveningSurvey = left_join(fullIDs, eveningSurvey, by="Name")
+fulleveningSurvey
+```
+
+```{r}
+#Looking at our column names so we know what to revise
+colnames(fullMorningSurvey)
+colnames(fullafternoonSurvey)
+colnames(fulleveningSurvey)
+```
+
+```{r}
+#Fixing column names - there's probably an easier way to do this but tbh I just used Excel and the CONCAT function with some copying and pasting from the NDA format
+colnames(fullMorningSurvey)[5] = "interview_date"
+colnames(fullMorningSurvey)[7] = "ethica_survey"
+colnames(fullMorningSurvey)[11] = "ethica_01"
+colnames(fullMorningSurvey)[12] = "ethica_02"
+colnames(fullMorningSurvey)[13] = "ethica_03"
+colnames(fullMorningSurvey)[14] = "ethica_04"
+colnames(fullMorningSurvey)[15] = "ethica_05"
+colnames(fullMorningSurvey)[16] = "ethica_06"
+colnames(fullMorningSurvey)[17] = "ethica_07"
+colnames(fullMorningSurvey)[18] = "ethica_08"
+colnames(fullMorningSurvey)[19] = "ethica_09"
+colnames(fullMorningSurvey)[20] = "ethica_10"
+colnames(fullMorningSurvey)[21] = "ethica_11"
+colnames(fullMorningSurvey)[22] = "ethica_12"
+colnames(fullMorningSurvey)[23] = "ethica_13"
+colnames(fullMorningSurvey)[24] = "ethica_14"
+colnames(fullMorningSurvey)[25] = "ethica_15"
+colnames(fullMorningSurvey)[26] = "ethica_16"
+colnames(fullMorningSurvey)[27] = "ethica_17"
+colnames(fullMorningSurvey)[28] = "ethica_18"
+colnames(fullMorningSurvey)[29] = "ethica_19"
+colnames(fullMorningSurvey)[30] = "ethica_20"
+colnames(fullMorningSurvey)[30] = "ethica_20"
+colnames(fullMorningSurvey)[31] = "ethica_21"
+colnames(fullMorningSurvey)[32] = "ethica_22"
+colnames(fullMorningSurvey)[33] = "ethica_23"
+colnames(fullMorningSurvey)[34] = "ethica_24"
+colnames(fullMorningSurvey)[35] = "ethica_25"
+colnames(fullMorningSurvey)[36] = "ethica_26"
+colnames(fullMorningSurvey)[37] = "ethica_27"
+colnames(fullMorningSurvey)[38] = "ethica_28"
+colnames(fullMorningSurvey)[39] = "ethica_29"
+colnames(fullMorningSurvey)[40] = "ethica_30"
+colnames(fullMorningSurvey)[41] = "ethica_31"
+colnames(fullMorningSurvey)[42] = "ethica_32"
+colnames(fullMorningSurvey)[43] = "ethica_33"
+colnames(fullMorningSurvey)[44] = "ethica_34"
+colnames(fullMorningSurvey)[45] = "ethica_35"
+colnames(fullMorningSurvey)[46] = "ethica_36"
+colnames(fullMorningSurvey)[47] = "ethica_37"
+colnames(fullMorningSurvey)[48] = "ethica_38"
+colnames(fullMorningSurvey)[49] = "ethica_39"
+colnames(fullMorningSurvey)[50] = "ethica_40"
+colnames(fullMorningSurvey)[51] = "ethica_41"
+colnames(fullMorningSurvey)[52] = "ethica_42"
+colnames(fullMorningSurvey)[53] = "ethica_43"
+colnames(fullMorningSurvey)[54] = "ethica_44"
+colnames(fullMorningSurvey)[55] = "ethica_45"
+colnames(fullMorningSurvey)[56] = "ethica_46"
+colnames(fullMorningSurvey)[57] = "ethica_47"
+colnames(fullMorningSurvey)[58] = "ethica_48"
+colnames(fullMorningSurvey)[59] = "ethica_49"
+colnames(fullMorningSurvey)[60] = "ethica_50"
+colnames(fullMorningSurvey)[61] = "ethica_51"
+colnames(fullMorningSurvey)[62] = "ethica_52"
+colnames(fullMorningSurvey)[63] = "ethica_53"
+colnames(fullMorningSurvey)[64] = "ethica_54"
+colnames(fullMorningSurvey)[65] = "ethica_55"
+colnames(fullMorningSurvey)[66] = "ethica_56"
+colnames(fullMorningSurvey)[67] = "ethica_57"
+colnames(fullMorningSurvey)[68] = "ethica_58"
+colnames(fullMorningSurvey)[69] = "ethica_59"
+colnames(fullMorningSurvey)[70] = "ethica_60"
+colnames(fullMorningSurvey)[71] = "ethica_61"
+colnames(fullMorningSurvey)[72] = "ethica_62"
+colnames(fullMorningSurvey)[73] = "ethica_63"
+colnames(fullMorningSurvey)[74] = "ethica_64"
+colnames(fullMorningSurvey)[75] = "ethica_64a"
+colnames(fullMorningSurvey)[78] = "ethica_65"
+colnames(fullMorningSurvey)[79] = "ethica_65a"
+colnames(fullMorningSurvey)[80] = "ethica_65b"
+fullMorningSurvey
+```
+
+```{r}
+#Dropping columns we don't need
+drop = c("Name", "Device ID", "Issued Time", "Duration (seconds) from scheduled to completion time", "Duration (seconds) from first response to completion time", "Location", "[83_MAQ_1] Indoors", "[83_MAQ_2] Outdoors")
+finalMorningSurvey = fullMorningSurvey[,!(names(fullMorningSurvey) %in% drop)]
+```
+```{r}
+#We're adding in empty columns so that it unifies with the other dataframes seamlessly - we want them all identical
+finalMorningSurvey = finalMorningSurvey %>% 
+  add_column(interview_age = NA,
+             sex = NA, 
+             ethica_66 = NA,
+             ethica_67 = NA,
+             ethica_67a = NA,
+             ethica_68 = NA,
+             ethica_68a = NA,
+             ethica_69 = NA,
+             ethica_70 = NA,
+             ethica_70a = NA,
+             ethica_71 = NA,
+             ethica_71a = NA,
+             ethica_72 = NA,
+             ethica_72a = NA,
+             ethica_73 = NA,
+             ethica_73a = NA,
+             ethica_74 = NA,
+             ethica_74a = NA,
+             ethica_75 = NA,
+             ethica_75a = NA,
+             ethica_76 = NA,
+             ethica_76a = NA,
+             ethica_77 = NA,
+             ethica_77a = NA,
+             ethica_78 = NA,
+             ethica_78a = NA)
+```
+
+```{r}
+#Setting up the order so that all the dataframes come together flawlessly
+surveyOrder = c('subjectkey','src_subject_id','interview_date','interview_age','sex','ethica_survey','ethica_01','ethica_02','ethica_03','ethica_04','ethica_05','ethica_06','ethica_07','ethica_08','ethica_09','ethica_10','ethica_11','ethica_12','ethica_13','ethica_14','ethica_15','ethica_16','ethica_17','ethica_18','ethica_19','ethica_20','ethica_21','ethica_22','ethica_23','ethica_24','ethica_25','ethica_26','ethica_27','ethica_28','ethica_29','ethica_30','ethica_31','ethica_32','ethica_33','ethica_34','ethica_35','ethica_36','ethica_37','ethica_38','ethica_39','ethica_40','ethica_41','ethica_42','ethica_43','ethica_44','ethica_45','ethica_46','ethica_47','ethica_48','ethica_49','ethica_50','ethica_51','ethica_52','ethica_53','ethica_54','ethica_55','ethica_56','ethica_57','ethica_58','ethica_59','ethica_60','ethica_61','ethica_62','ethica_63','ethica_64','ethica_64a','ethica_65','ethica_65a','ethica_65b','ethica_66','ethica_67','ethica_67a','ethica_68','ethica_68a','ethica_69','ethica_70','ethica_70a','ethica_71','ethica_71a','ethica_72','ethica_72a','ethica_73','ethica_73a','ethica_74','ethica_74a','ethica_75','ethica_75a','ethica_76','ethica_76a','ethica_77','ethica_77a','ethica_78','ethica_78a')
+```
+
+```{r}
+#Applying the order to the morning survey dataframe
+finalOrgMorningSurvey = finalMorningSurvey[, surveyOrder] 
+finalOrgMorningSurvey
+```
+
+```{r}
+#redundant but just in case
+drop = c("Name", "Device ID", "Issued Time", "Duration (seconds) from scheduled to completion time", "Duration (seconds) from first response to completion time", "Location", "[83_MAQ_1] Indoors", "[83_MAQ_2] Outdoors", "[111_MAQ_1] Indoors", "[111_MAQ_2] Outdoors")
+fullafternoonSurvey = fullafternoonSurvey[,!(names(fullafternoonSurvey) %in% drop)]
+```
+```{r}
+#same as above, adding columns that don't exist to make dataframes the same
+fullafternoonSurvey = fullafternoonSurvey %>% 
+  add_column(interview_age = NA,
+             sex = NA, 
+             ethica_01 = NA, 
+             ethica_02 = NA, 
+             ethica_66 = NA,
+             ethica_67 = NA,
+             ethica_67a = NA,
+             ethica_68 = NA,
+             ethica_68a = NA,
+             ethica_69 = NA,
+             ethica_70 = NA,
+             ethica_70a = NA,
+             ethica_71 = NA,
+             ethica_71a = NA,
+             ethica_72 = NA,
+             ethica_72a = NA,
+             ethica_73 = NA,
+             ethica_73a = NA,
+             ethica_74 = NA,
+             ethica_74a = NA,
+             ethica_75 = NA,
+             ethica_75a = NA,
+             ethica_76 = NA,
+             ethica_76a = NA,
+             ethica_77 = NA,
+             ethica_77a = NA,
+             ethica_78 = NA,
+             ethica_78a = NA)
+```
+
+```{r}
+#renaming columns
+colnames(fullafternoonSurvey)[3] = "interview_date"
+colnames(fullafternoonSurvey)[4] = "ethica_survey"
+colnames(fullafternoonSurvey)[5] = "ethica_03"
+colnames(fullafternoonSurvey)[6] = "ethica_04"
+colnames(fullafternoonSurvey)[7] = "ethica_05"
+colnames(fullafternoonSurvey)[8] = "ethica_06"
+colnames(fullafternoonSurvey)[9] = "ethica_07"
+colnames(fullafternoonSurvey)[10] = "ethica_08"
+colnames(fullafternoonSurvey)[11] = "ethica_09"
+colnames(fullafternoonSurvey)[12] = "ethica_10"
+colnames(fullafternoonSurvey)[13] = "ethica_11"
+colnames(fullafternoonSurvey)[14] = "ethica_12"
+colnames(fullafternoonSurvey)[15] = "ethica_13"
+colnames(fullafternoonSurvey)[16] = "ethica_14"
+colnames(fullafternoonSurvey)[17] = "ethica_15"
+colnames(fullafternoonSurvey)[18] = "ethica_16"
+colnames(fullafternoonSurvey)[19] = "ethica_17"
+colnames(fullafternoonSurvey)[20] = "ethica_18"
+colnames(fullafternoonSurvey)[21] = "ethica_19"
+colnames(fullafternoonSurvey)[22] = "ethica_20"
+colnames(fullafternoonSurvey)[23] = "ethica_21"
+colnames(fullafternoonSurvey)[24] = "ethica_22"
+colnames(fullafternoonSurvey)[25] = "ethica_23"
+colnames(fullafternoonSurvey)[26] = "ethica_24"
+colnames(fullafternoonSurvey)[27] = "ethica_25"
+colnames(fullafternoonSurvey)[28] = "ethica_26"
+colnames(fullafternoonSurvey)[29] = "ethica_27"
+colnames(fullafternoonSurvey)[30] = "ethica_28"
+colnames(fullafternoonSurvey)[31] = "ethica_29"
+colnames(fullafternoonSurvey)[32] = "ethica_30"
+colnames(fullafternoonSurvey)[33] = "ethica_31"
+colnames(fullafternoonSurvey)[34] = "ethica_32"
+colnames(fullafternoonSurvey)[35] = "ethica_33"
+colnames(fullafternoonSurvey)[36] = "ethica_34"
+colnames(fullafternoonSurvey)[37] = "ethica_35"
+colnames(fullafternoonSurvey)[38] = "ethica_36"
+colnames(fullafternoonSurvey)[39] = "ethica_37"
+colnames(fullafternoonSurvey)[40] = "ethica_38"
+colnames(fullafternoonSurvey)[41] = "ethica_39"
+colnames(fullafternoonSurvey)[42] = "ethica_40"
+colnames(fullafternoonSurvey)[43] = "ethica_41"
+colnames(fullafternoonSurvey)[44] = "ethica_42"
+colnames(fullafternoonSurvey)[45] = "ethica_43"
+colnames(fullafternoonSurvey)[46] = "ethica_44"
+colnames(fullafternoonSurvey)[47] = "ethica_45"
+colnames(fullafternoonSurvey)[48] = "ethica_46"
+colnames(fullafternoonSurvey)[49] = "ethica_47"
+colnames(fullafternoonSurvey)[50] = "ethica_48"
+colnames(fullafternoonSurvey)[51] = "ethica_49"
+colnames(fullafternoonSurvey)[52] = "ethica_50"
+colnames(fullafternoonSurvey)[53] = "ethica_51"
+colnames(fullafternoonSurvey)[54] = "ethica_52"
+colnames(fullafternoonSurvey)[55] = "ethica_53"
+colnames(fullafternoonSurvey)[56] = "ethica_54"
+colnames(fullafternoonSurvey)[57] = "ethica_55"
+colnames(fullafternoonSurvey)[58] = "ethica_56"
+colnames(fullafternoonSurvey)[59] = "ethica_57"
+colnames(fullafternoonSurvey)[60] = "ethica_58"
+colnames(fullafternoonSurvey)[61] = "ethica_59"
+colnames(fullafternoonSurvey)[62] = "ethica_60"
+colnames(fullafternoonSurvey)[63] = "ethica_61"
+colnames(fullafternoonSurvey)[64] = "ethica_62"
+colnames(fullafternoonSurvey)[65] = "ethica_63"
+colnames(fullafternoonSurvey)[66] = "ethica_64"
+colnames(fullafternoonSurvey)[67] = "ethica_64a"
+colnames(fullafternoonSurvey)[68] = "ethica_65"
+colnames(fullafternoonSurvey)[69] = "ethica_65a"
+colnames(fullafternoonSurvey)[70] = "ethica_65b"
+fullafternoonSurvey
+```
+
+```{r}
+#Reorganizing the afternoon surveys 
+finalOrgAfternoonSurvey = fullafternoonSurvey[, surveyOrder] 
+finalOrgAfternoonSurvey
+```
+
+```{r}
+#This is actually not redundant - the evening survey had slightly different variables that I added in. Probably could've added it to the above drop dataframe, but didn't need it previously and I don't want to mess up my spaghetti code
+drop = c("Name", "Device ID", "Issued Time", "Duration (seconds) from scheduled to completion time", "Duration (seconds) from first response to completion time", "Location", "[83_MAQ_1] Indoors", "[83_MAQ_2] Outdoors", "[111_MAQ_1] Indoors", "[111_MAQ_2] Outdoors")
+fulleveningSurvey = fulleveningSurvey[,!(names(fulleveningSurvey) %in% drop)]
+fulleveningSurvey
+colnames(fulleveningSurvey)
+```
+```{r}
+#This is the largest dataframe so we actually are only adding a small amount of columns 
+fulleveningSurvey = fulleveningSurvey %>% 
+  add_column(interview_age = NA,
+             sex = NA, 
+             ethica_01 = NA, 
+             ethica_02 = NA)
+```
+```{r}
+#renaming 
+colnames(fulleveningSurvey)[5] = "ethica_03"
+colnames(fulleveningSurvey)[6] = "ethica_04"
+colnames(fulleveningSurvey)[7] = "ethica_05"
+colnames(fulleveningSurvey)[8] = "ethica_06"
+colnames(fulleveningSurvey)[9] = "ethica_07"
+colnames(fulleveningSurvey)[10] = "ethica_08"
+colnames(fulleveningSurvey)[11] = "ethica_09"
+colnames(fulleveningSurvey)[12] = "ethica_10"
+colnames(fulleveningSurvey)[13] = "ethica_11"
+colnames(fulleveningSurvey)[14] = "ethica_12"
+colnames(fulleveningSurvey)[15] = "ethica_13"
+colnames(fulleveningSurvey)[16] = "ethica_14"
+colnames(fulleveningSurvey)[17] = "ethica_15"
+colnames(fulleveningSurvey)[18] = "ethica_16"
+colnames(fulleveningSurvey)[19] = "ethica_17"
+colnames(fulleveningSurvey)[20] = "ethica_18"
+colnames(fulleveningSurvey)[21] = "ethica_19"
+colnames(fulleveningSurvey)[22] = "ethica_20"
+colnames(fulleveningSurvey)[23] = "ethica_21"
+colnames(fulleveningSurvey)[24] = "ethica_22"
+colnames(fulleveningSurvey)[25] = "ethica_23"
+colnames(fulleveningSurvey)[26] = "ethica_24"
+colnames(fulleveningSurvey)[27] = "ethica_25"
+colnames(fulleveningSurvey)[28] = "ethica_26"
+colnames(fulleveningSurvey)[29] = "ethica_27"
+colnames(fulleveningSurvey)[30] = "ethica_28"
+colnames(fulleveningSurvey)[31] = "ethica_29"
+colnames(fulleveningSurvey)[32] = "ethica_30"
+colnames(fulleveningSurvey)[33] = "ethica_31"
+colnames(fulleveningSurvey)[34] = "ethica_32"
+colnames(fulleveningSurvey)[35] = "ethica_33"
+colnames(fulleveningSurvey)[36] = "ethica_34"
+colnames(fulleveningSurvey)[37] = "ethica_35"
+colnames(fulleveningSurvey)[38] = "ethica_36"
+colnames(fulleveningSurvey)[39] = "ethica_37"
+colnames(fulleveningSurvey)[40] = "ethica_38"
+colnames(fulleveningSurvey)[41] = "ethica_39"
+colnames(fulleveningSurvey)[42] = "ethica_40"
+colnames(fulleveningSurvey)[43] = "ethica_41"
+colnames(fulleveningSurvey)[44] = "ethica_42"
+colnames(fulleveningSurvey)[45] = "ethica_43"
+colnames(fulleveningSurvey)[46] = "ethica_44"
+colnames(fulleveningSurvey)[47] = "ethica_45"
+colnames(fulleveningSurvey)[48] = "ethica_46"
+colnames(fulleveningSurvey)[49] = "ethica_47"
+colnames(fulleveningSurvey)[50] = "ethica_48"
+colnames(fulleveningSurvey)[51] = "ethica_49"
+colnames(fulleveningSurvey)[52] = "ethica_50"
+colnames(fulleveningSurvey)[53] = "ethica_51"
+colnames(fulleveningSurvey)[54] = "ethica_52"
+colnames(fulleveningSurvey)[55] = "ethica_53"
+colnames(fulleveningSurvey)[56] = "ethica_54"
+colnames(fulleveningSurvey)[57] = "ethica_55"
+colnames(fulleveningSurvey)[58] = "ethica_56"
+colnames(fulleveningSurvey)[59] = "ethica_57"
+colnames(fulleveningSurvey)[60] = "ethica_58"
+colnames(fulleveningSurvey)[61] = "ethica_59"
+colnames(fulleveningSurvey)[62] = "ethica_60"
+colnames(fulleveningSurvey)[63] = "ethica_61"
+colnames(fulleveningSurvey)[64] = "ethica_62"
+colnames(fulleveningSurvey)[65] = "ethica_63"
+colnames(fulleveningSurvey)[66] = "ethica_64"
+colnames(fulleveningSurvey)[67] = "ethica_64a"
+colnames(fulleveningSurvey)[68] = "ethica_65"
+colnames(fulleveningSurvey)[69] = "ethica_65a"
+colnames(fulleveningSurvey)[70] = "ethica_65b"
+colnames(fulleveningSurvey)[71] = "ethica_66"
+colnames(fulleveningSurvey)[72] = "ethica_67"
+colnames(fulleveningSurvey)[73] = "ethica_67a"
+colnames(fulleveningSurvey)[74] = "ethica_68"
+colnames(fulleveningSurvey)[75] = "ethica_68a"
+colnames(fulleveningSurvey)[76] = "ethica_69"
+colnames(fulleveningSurvey)[77] = "ethica_70"
+colnames(fulleveningSurvey)[78] = "ethica_70a"
+colnames(fulleveningSurvey)[79] = "ethica_71"
+colnames(fulleveningSurvey)[80] = "ethica_71a"
+colnames(fulleveningSurvey)[81] = "ethica_72"
+colnames(fulleveningSurvey)[82] = "ethica_72a"
+colnames(fulleveningSurvey)[83] = "ethica_73"
+colnames(fulleveningSurvey)[84] = "ethica_73a"
+colnames(fulleveningSurvey)[85] = "ethica_74"
+colnames(fulleveningSurvey)[86] = "ethica_74a"
+colnames(fulleveningSurvey)[87] = "ethica_75"
+colnames(fulleveningSurvey)[88] = "ethica_75a"
+colnames(fulleveningSurvey)[89] = "ethica_76"
+colnames(fulleveningSurvey)[90] = "ethica_76a"
+colnames(fulleveningSurvey)[91] = "ethica_77"
+colnames(fulleveningSurvey)[92] = "ethica_77a"
+colnames(fulleveningSurvey)[93] = "ethica_78"
+colnames(fulleveningSurvey)[94] = "ethica_78a"
+```
+```{r}
+#More renaming that I could've added to the previous cell but realized later lol
+colnames(fulleveningSurvey)[3] = "interview_date"
+colnames(fulleveningSurvey)[4] = "ethica_survey"
+```
+
+
+```{r}
+#reorganizing
+finalOrgEveningSurvey = fulleveningSurvey[, surveyOrder] 
+```
+
+```{r}
+#Binding together all the EMA together
+twoEMA = rbind(finalOrgMorningSurvey, finalOrgAfternoonSurvey)
+finalEMA = rbind(twoEMA, finalOrgEveningSurvey)
+finalEMA
+```
+```{r}
+#I need the ages and sex demographic characteristics, so we're bringing it in here and making a new dataframe that only contains that information. 
+demos = read.csv('E:/Chrome Downloads/eatdisdemo01_template.csv')
+demos = demos[-c(1,3,6:205)]
+demos
+```
+
+```{r}
+#I removed the existing age and sex columns from the finalEMA dataframe and added them back in using the demographic dataframe based on GUID
+finalEMA = finalEMA[-c(4,5)]
+finalEMA = left_join(demos, finalEMA, by="src_subject_id")
+```
+
+```{r}
+#One last reorganization
+finalEMA = finalEMA[, surveyOrder] 
+```
+```{r}
+#Removing cases that don't have a GUID assigned, then converting datetimes into dates for the interview_date item
+finalEMA = finalEMA %>% drop_na('subjectkey')
+finalEMA$interview_date = as.Date(finalEMA$interview_date)
+```
+
+```{r}
+#Changing NA values to blanks because it doesn't validate on the NDA
+finalEMAblank = finalEMA
+finalEMAblank = sapply(finalEMAblank, as.character)
+finalEMAblank[is.na(finalEMAblank)] = ""
+finalEMAblank
+```
+
+
+```{r}
+#saved!
+write.csv(finalEMAblank, 'C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/ethica_ema01.csv')
+```
+

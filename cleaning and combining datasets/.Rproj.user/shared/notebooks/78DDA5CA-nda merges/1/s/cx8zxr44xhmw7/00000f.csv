@@ -1,0 +1,8 @@
+"0","#pulling in data and IDs"
+"0","#raw EMA pulled directly from Ethica - we don't need everything previously where we tried to merge things"
+"0","#GUIDs generated from the NIH NDA tool and then reformatted to include participant IDs"
+"0",""
+"0","morningSurvey = read.csv(""C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/responses/survey_responses_6758.csv"", check.names = FALSE)"
+"0","#check.names seems to be how we prevent the prefixes from showing up in the output dataframe, prevents the issue we had above "
+"0","guids = read.csv(""C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/GUID RESULTS.csv"")"
+"0","ethicaIDs = read.csv(""C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/Data/Ethica IDs.csv"")"

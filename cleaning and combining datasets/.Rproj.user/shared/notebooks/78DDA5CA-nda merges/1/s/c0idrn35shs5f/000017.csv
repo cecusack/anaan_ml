@@ -1,0 +1,4 @@
+"0","#Removing cases that don't have a GUID assigned and saving our work "
+"0","finalEMA = finalEMA %>% drop_na('subjectkey')"
+"0","finalEMA$interview_date = as.Date(finalEMA$interview_date)"
+"0","#write.csv(finalEMA, 'C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/ethica_ema01.csv')"

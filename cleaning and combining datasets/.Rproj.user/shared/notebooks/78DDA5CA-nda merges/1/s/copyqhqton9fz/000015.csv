@@ -1,0 +1,4 @@
+"0","afternoonSurvey = read.csv(""C:/Users/Luis/Box/R15 Sensor Preprocessing and Analysis/NDA/responses/survey_responses_6963.csv"", check.names = FALSE)"
+"0","afternoonSurvey$Name = as.character(afternoonSurvey$Name)"
+"0","fullafternoonSurvey = left_join(fullIDs, afternoonSurvey, by=""Name"")"
+"0","fullafternoonSurvey"

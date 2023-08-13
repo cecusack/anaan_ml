@@ -1,0 +1,11 @@
+---
+title: "Untitled"
+author: "Luis Sandoval-Araujo"
+date: "2023-07-11"
+output: html_document
+---
+
+```{r}
+physioWindows = read.csv(')
+```
+

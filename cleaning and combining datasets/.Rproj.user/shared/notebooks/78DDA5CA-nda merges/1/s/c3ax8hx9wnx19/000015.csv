@@ -1,0 +1,3 @@
+"0","demos = read.csv('E:/Chrome Downloads/eatdisdemo01_template.csv')"
+"0","demos = demos[-c(1,3,6:205)]"
+"0","demos"

@@ -1,0 +1,3 @@
+"0","drop = c(""Name"", ""Device ID"", ""Issued Time"", ""Duration (seconds) from scheduled to completion time"", ""Duration (seconds) from first response to completion time"", ""Location"", ""[83_MAQ_1] Indoors"", ""[83_MAQ_2] Outdoors"")"
+"0","fullafternoonSurvey = fullafternoonSurvey[,!(names(fullafternoonSurvey) %in% drop)]"
+"0","fullafternoonSurvey"

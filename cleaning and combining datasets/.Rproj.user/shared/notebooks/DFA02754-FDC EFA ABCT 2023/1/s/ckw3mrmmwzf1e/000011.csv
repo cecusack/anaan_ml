@@ -1,0 +1,27 @@
+"0","#importing libraries"
+"0","library(psych)"
+"0","library(corrplot)"
+"2","corrplot 0.92 loaded
+"
+"0","library(""psych"")"
+"0","library(ggplot2)"
+"2","
+Attaching package: ‘ggplot2’
+
+"
+"2","The following objects are masked from ‘package:psych’:
+
+    %+%, alpha
+
+"
+"0","library(GPArotation)"
+"2","
+Attaching package: ‘GPArotation’
+
+"
+"2","The following objects are masked from ‘package:psych’:
+
+    equamax, varimin
+
+"
+"0","library(xtable)"

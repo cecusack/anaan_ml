@@ -1,0 +1,2 @@
+"0","names(dat) = sub('^fdcq_', '', names(dat))"
+"0","dat"

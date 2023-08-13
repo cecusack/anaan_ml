@@ -1,0 +1,6 @@
+"0","fulleveningSurvey = fulleveningSurvey %>% "
+"0","  add_column(interview_age = NA,"
+"0","             sex = NA, "
+"0","             ethica_01 = NA, "
+"0","             ethica_02 = NA)"
+"0","fulleveningSurvey"

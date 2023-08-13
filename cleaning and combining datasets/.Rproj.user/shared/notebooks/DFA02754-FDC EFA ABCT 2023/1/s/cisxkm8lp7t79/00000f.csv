@@ -1,0 +1,5 @@
+"0","library(ggplot2)"
+"0","dietculture = fa(dat,nfactors=ncol(x), rotate=""none"")"
+"0","n_factors = length(dietculture$e.values)"
+"0","scree = data.frame(Factor_n = as.factor(1:n_factors), Eigenvalue = dietculture$e.values)"
+"0","ggplot(scree, aes(x=Factor_n, y=Eigenvalue, group=1))+ geom_point() + geom_line() + xlab(""Number of factors"") + ylab(""Initial eigenvalue"") + labs(title = ""Scree Plot"", subtitle = ""(Based on the reduced correlation matrix)"") "

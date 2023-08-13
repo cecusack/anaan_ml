@@ -1,0 +1,133 @@
+---
+title: "FDC ABCT 2023 EFA"
+output:
+  html_document: default
+  pdf_document: default
+date: '2023-01-29'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+install.packages("GPArotation")
+```
+
+
+```{r}
+#importing libraries
+library(psych)
+library(corrplot)
+library("psych")
+library(ggplot2)
+library(GPArotation)
+library(xtable)
+```
+
+
+```{r}
+#bringing in the data
+
+fdc = read.csv("C:/Users/Luis/Dropbox/independent stuff/Family Diet Culture/ABCT2023/EFA dataset.csv")
+fdc
+
+```
+
+```{r}
+describe(fdc)
+```
+```{r}
+dim(fdc)
+```
+```{r}
+dat = fdc[,46:72]
+head(dat)
+```
+
+```{r}
+dat = na.omit(dat)
+colnames(dat)[1]="fdcq_1"
+dat
+names(dat) = sub('^fdcq_', '', names(dat))
+dat
+```
+```{r}
+cor(dat)
+```
+
+
+```{r}
+datamatrix = cor(dat)
+corrplot(datamatrix, method='circle', addCoef.col = 1, number.cex = 0.4, res=500)
+```
+```{r}
+corrplot(datamatrix, method='color', addCoef.col = 1, number.cex = 0.4, res=500)
+```
+```{r}
+x = dat[]
+y = dat[]
+```
+
+```{r}
+x
+```
+```{r}
+y
+```
+
+```{r}
+KMO(r=cor(x))
+```
+
+```{r}
+cortest.bartlett(x)
+```
+```{r}
+library(ggplot2)
+dietculture = fa(dat,nfactors=ncol(x), rotate="none")
+n_factors = length(dietculture$e.values)
+scree = data.frame(Factor_n = as.factor(1:n_factors), Eigenvalue = dietculture$e.values)
+ggplot(scree, aes(x=Factor_n, y=Eigenvalue, group=1))+ geom_point() + geom_line() + xlab("Number of factors") + ylab("Initial eigenvalue") + labs(title = "Scree Plot", subtitle = "(Based on the reduced correlation matrix)") 
+```
+```{r}
+parallel = fa.parallel(x)
+```
+
+```{r}
+fa.none = fa(r=x, 
+             nfactors=4, 
+             rotate = "promax" , 
+             SMC = TRUE, 
+             fm="pa", 
+             max.iter=100)
+fa.none
+
+```
+```{r}
+str(fa.none$loadings)
+class(fa.none$loadings)
+
+file_output =xtable(unclass(fa.none$loadings))
+print(file_output,file="4Factor.txt")
+```
+
+
+```{r}
+fa.none1 = fa(r=x, 
+             nfactors=3, 
+             rotate = "promax" , 
+             SMC = TRUE, 
+             fm="pa", 
+             max.iter=100)
+fa.none1
+```
+```{r}
+fa.none2 = fa(r=x, 
+             nfactors=2, 
+             rotate = "promax" , 
+             SMC = TRUE, 
+             fm="pa", 
+             max.iter=100)
+fa.none2
+```
+

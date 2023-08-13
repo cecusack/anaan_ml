@@ -1,0 +1,2 @@
+"0","finalEMA = finalEMA[-c(4,5)]"
+"0","finalEMA"

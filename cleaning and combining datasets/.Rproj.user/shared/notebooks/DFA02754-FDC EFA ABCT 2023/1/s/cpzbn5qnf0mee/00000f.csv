@@ -1,0 +1,4 @@
+"0","#bringing in the data"
+"0",""
+"0","fdc = read.csv(""C:/Users/Luis/Dropbox/independent stuff/Family Diet Culture/ABCT2023/EFA dataset.csv"")"
+"0","fdc"
