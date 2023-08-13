@@ -2,9 +2,8 @@
 
 ## Organization   
 Within the cleaning and combining datasets folder:    
-- data.csv is data I received from Yuchen in cardbox (
-R15 Sensor Preprocessing and Analysis > RAW ALL datasets deidentified) that contains the raw datasets for DH3, PT open series, online IE, in vivo, PR, RPS, and CS
-- AAN missingness measures.Rmd is where I clean baseline data (e.g., only keeping AN/AAN diagnoses, checking missingness, scoring measures, checking plausible values)
+- ANAANcombined_cec_2023-07-03.csv is a merged dataset using individual data I received from Yuchen in cardbox (R15 Sensor Preprocessing and Analysis > RAW ALL datasets deidentified). This csv combines the following datasets: DH3, PT open series, online IE, in vivo, PR, RPS, and CS
+- AAN missingness measures.Rmd is where I clean baseline data (e.g., only keeping AN/AAN diagnoses, checking missingness, scoring measures, checking plausible values). the hmtl file is a knitted version of this markdown.
 
 ## Measures   
 - **BDI**:    
